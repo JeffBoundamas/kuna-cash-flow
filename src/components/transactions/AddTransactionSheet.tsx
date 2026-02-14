@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -8,7 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
-import { useAddTransaction } from "@/hooks/use-transactions";
+import { useAddTransaction, useAllTransactions } from "@/hooks/use-transactions";
+import { useCategorySuggestion } from "@/hooks/use-category-suggestion";
+import CategoryListPicker from "@/components/transactions/CategoryListPicker";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -27,11 +29,21 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
 
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
+  const { data: allTransactions = [] } = useAllTransactions();
   const addTransaction = useAddTransaction();
 
   const filteredCategories = categories.filter((c) =>
     type === "income" ? c.type === "Income" : c.type === "Expense"
   );
+
+  const suggestedCategoryId = useCategorySuggestion(label, categories, allTransactions, type);
+
+  // Auto-select suggestion when no category is selected
+  useEffect(() => {
+    if (suggestedCategoryId && !categoryId) {
+      setCategoryId(suggestedCategoryId);
+    }
+  }, [suggestedCategoryId]);
 
   const handleSubmit = async () => {
     const selectedAccount = accountId || accounts[0]?.id;
@@ -154,27 +166,17 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
             )}
           </div>
 
-          {/* Category */}
+          {/* Category - List format */}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">
               Catégorie *
             </label>
-            <div className="flex flex-wrap gap-2">
-              {filteredCategories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategoryId(cat.id)}
-                  className={cn(
-                    "rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
-                    categoryId === cat.id
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground"
-                  )}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+            <CategoryListPicker
+              categories={filteredCategories}
+              selectedId={categoryId}
+              onSelect={setCategoryId}
+              suggestedId={suggestedCategoryId}
+            />
           </div>
 
           {/* Note / SMS */}
