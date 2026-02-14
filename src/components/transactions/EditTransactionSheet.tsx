@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useUpdateTransaction } from "@/hooks/use-transactions";
+import CategoryListPicker from "@/components/transactions/CategoryListPicker";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import type { Transaction } from "@/lib/types";
@@ -162,25 +163,14 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
             </div>
           </div>
 
-          {/* Category */}
+          {/* Category - List format */}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Catégorie *</label>
-            <div className="flex flex-wrap gap-2">
-              {filteredCategories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategoryId(cat.id)}
-                  className={cn(
-                    "rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
-                    categoryId === cat.id
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground"
-                  )}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+            <CategoryListPicker
+              categories={filteredCategories}
+              selectedId={categoryId}
+              onSelect={setCategoryId}
+            />
           </div>
 
           {/* Note */}
