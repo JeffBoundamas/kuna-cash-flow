@@ -1,5 +1,5 @@
 import { NavLink as RouterNavLink } from "react-router-dom";
-import { LayoutDashboard, ArrowLeftRight, PieChart, Target } from "lucide-react";
+import { LayoutDashboard, ArrowLeftRight, PieChart, Target, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -7,6 +7,7 @@ const tabs = [
   { to: "/transactions", icon: ArrowLeftRight, label: "Mouvements" },
   { to: "/budget", icon: PieChart, label: "Budget" },
   { to: "/goals", icon: Target, label: "Objectifs" },
+  { to: "/settings", icon: UserCircle, label: "Profil" },
 ];
 
 const BottomNav = () => {
@@ -20,7 +21,7 @@ const BottomNav = () => {
             end={to === "/"}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1.5 text-[11px] font-medium transition-colors rounded-lg",
+                "flex flex-col items-center gap-0.5 px-2 py-1.5 text-[11px] font-medium transition-colors rounded-lg",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
