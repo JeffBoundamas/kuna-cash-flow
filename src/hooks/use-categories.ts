@@ -23,7 +23,7 @@ export const useAddCategory = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (cat: { name: string; type: CategoryType; nature: CategoryNature }) => {
+    mutationFn: async (cat: { name: string; type: CategoryType; nature: CategoryNature; color: string }) => {
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase.from("categories").insert({
         user_id: user.id,
@@ -38,7 +38,7 @@ export const useAddCategory = () => {
 export const useUpdateCategory = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; name: string; type: CategoryType; nature: CategoryNature }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; name: string; type: CategoryType; nature: CategoryNature; color: string }) => {
       const { error } = await supabase
         .from("categories")
         .update(updates)
