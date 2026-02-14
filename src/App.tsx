@@ -11,6 +11,7 @@ import Transactions from "@/pages/Transactions";
 import BudgetPage from "@/pages/Budget";
 import GoalsPage from "@/pages/Goals";
 import Settings from "@/pages/Settings";
+import Categories from "@/pages/Categories";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -36,6 +37,7 @@ const App = () => (
                       <Route path="/budget" element={<BudgetPage />} />
                       <Route path="/goals" element={<GoalsPage />} />
                       <Route path="/settings" element={<Settings />} />
+                      <Route path="/categories" element={<Categories />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AppLayout>
