@@ -1,8 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Mail } from "lucide-react";
+import { LogOut, User, Mail, ChevronRight, Tag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import CategoryManager from "@/components/categories/CategoryManager";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -34,7 +33,19 @@ const Settings = () => {
         </div>
       </div>
 
-      <CategoryManager />
+      {/* Sub-menu items */}
+      <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
+        <button
+          onClick={() => navigate("/categories")}
+          className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Tag className="h-4.5 w-4.5 text-muted-foreground" />
+            <span className="text-sm font-medium">Catégories</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </div>
 
       <Button
         onClick={handleLogout}
