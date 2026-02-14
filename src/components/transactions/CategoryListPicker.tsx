@@ -9,11 +9,20 @@ const NATURE_LABELS: Record<CategoryNature, string> = {
   Savings: "Épargne",
 };
 
-const NATURE_DOT: Record<CategoryNature, string> = {
-  Essential: "bg-blue-500",
-  Desire: "bg-amber-500",
-  Savings: "bg-emerald-500",
+const COLOR_DOT: Record<string, string> = {
+  red: "bg-red-500",
+  orange: "bg-orange-500",
+  amber: "bg-amber-500",
+  yellow: "bg-yellow-500",
+  green: "bg-green-500",
+  emerald: "bg-emerald-500",
+  blue: "bg-blue-500",
+  indigo: "bg-indigo-500",
+  violet: "bg-violet-500",
+  rose: "bg-rose-500",
 };
+
+const getDot = (color: string) => COLOR_DOT[color] ?? "bg-blue-500";
 
 interface Props {
   categories: Category[];
@@ -35,7 +44,6 @@ const CategoryListPicker = ({ categories, selectedId, onSelect, suggestedId }: P
 
   return (
     <div className="space-y-1">
-      {/* Trigger button */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -48,7 +56,7 @@ const CategoryListPicker = ({ categories, selectedId, onSelect, suggestedId }: P
       >
         <div className="flex items-center gap-2.5 min-w-0">
           {displayCat && (
-            <span className={cn("h-2 w-2 rounded-full flex-shrink-0", NATURE_DOT[displayCat.nature])} />
+            <span className={cn("h-2 w-2 rounded-full flex-shrink-0", getDot(displayCat.color))} />
           )}
           <span className="truncate">
             {selectedCat ? selectedCat.name : suggestedCat ? `${suggestedCat.name} (suggestion)` : "Choisir une catégorie"}
@@ -57,7 +65,6 @@ const CategoryListPicker = ({ categories, selectedId, onSelect, suggestedId }: P
         <ChevronDown className={cn("h-4 w-4 flex-shrink-0 transition-transform", expanded && "rotate-180")} />
       </button>
 
-      {/* Expandable list */}
       {expanded && (
         <div className="rounded-xl border border-border overflow-hidden divide-y divide-border max-h-48 overflow-y-auto">
           {categories.map((cat) => {
@@ -69,19 +76,12 @@ const CategoryListPicker = ({ categories, selectedId, onSelect, suggestedId }: P
                 onClick={() => { onSelect(cat.id); setExpanded(false); }}
                 className={cn(
                   "flex items-center justify-between w-full px-4 py-2.5 text-left transition-colors",
-                  isSelected
-                    ? "bg-primary/10"
-                    : isSuggested
-                    ? "bg-accent/50"
-                    : "hover:bg-muted/50"
+                  isSelected ? "bg-primary/10" : isSuggested ? "bg-accent/50" : "hover:bg-muted/50"
                 )}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span className={cn("h-2 w-2 rounded-full flex-shrink-0", NATURE_DOT[cat.nature])} />
-                  <span className={cn(
-                    "text-sm truncate",
-                    isSelected ? "font-semibold text-primary" : "text-foreground"
-                  )}>
+                  <span className={cn("h-2 w-2 rounded-full flex-shrink-0", getDot(cat.color))} />
+                  <span className={cn("text-sm truncate", isSelected ? "font-semibold text-primary" : "text-foreground")}>
                     {cat.name}
                   </span>
                   {isSuggested && (
@@ -91,9 +91,7 @@ const CategoryListPicker = ({ categories, selectedId, onSelect, suggestedId }: P
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-[10px] text-muted-foreground">
-                    {NATURE_LABELS[cat.nature]}
-                  </span>
+                  <span className="text-[10px] text-muted-foreground">{NATURE_LABELS[cat.nature]}</span>
                   {isSelected && <Check className="h-4 w-4 text-primary" />}
                 </div>
               </button>

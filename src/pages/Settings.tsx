@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Mail, ChevronRight, Tag } from "lucide-react";
+import { LogOut, User, Mail, ChevronRight, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
@@ -33,15 +33,24 @@ const Settings = () => {
         </div>
       </div>
 
-      {/* Sub-menu items */}
       <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
         <button
-          onClick={() => navigate("/categories")}
+          onClick={() => navigate("/categories?type=expense")}
           className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <Tag className="h-4.5 w-4.5 text-muted-foreground" />
-            <span className="text-sm font-medium">Catégories</span>
+            <ArrowDownCircle className="h-4.5 w-4.5 text-muted-foreground" />
+            <span className="text-sm font-medium">Catégories de dépenses</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
+        <button
+          onClick={() => navigate("/categories?type=income")}
+          className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <ArrowUpCircle className="h-4.5 w-4.5 text-muted-foreground" />
+            <span className="text-sm font-medium">Catégories de revenus</span>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>

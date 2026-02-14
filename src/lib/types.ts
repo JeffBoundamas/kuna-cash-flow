@@ -20,6 +20,7 @@ export interface Category {
   name: string;
   type: CategoryType;
   nature: CategoryNature;
+  color: string;
   created_at: string;
 }
 
