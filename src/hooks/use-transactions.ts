@@ -49,6 +49,22 @@ export const useTransactions = (month?: number, year?: number) => {
   });
 };
 
+export const useAllTransactions = () => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["transactions-all", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .order("date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Transaction[];
+    },
+    enabled: !!user,
+  });
+};
+
 export const useAddTransaction = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
@@ -83,6 +99,78 @@ export const useAddTransaction = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["transactions-all"] });
+      qc.invalidateQueries({ queryKey: ["accounts"] });
+    },
+  });
+};
+
+export const useUpdateTransaction = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, oldAmount, oldAccountId, ...updates }: {
+      id: string;
+      oldAmount: number;
+      oldAccountId: string;
+      account_id: string;
+      category_id: string;
+      amount: number;
+      label: string;
+      date?: string;
+      sms_reference?: string | null;
+    }) => {
+      const { error } = await supabase
+        .from("transactions")
+        .update({
+          account_id: updates.account_id,
+          category_id: updates.category_id,
+          amount: updates.amount,
+          label: updates.label,
+          date: updates.date,
+          sms_reference: updates.sms_reference,
+        })
+        .eq("id", id);
+      if (error) throw error;
+
+      // Reverse old amount on old account
+      if (oldAccountId === updates.account_id) {
+        const diff = updates.amount - oldAmount;
+        if (diff !== 0) {
+          const { data: acc } = await supabase.from("accounts").select("balance").eq("id", oldAccountId).maybeSingle();
+          if (acc) await supabase.from("accounts").update({ balance: acc.balance + diff }).eq("id", oldAccountId);
+        }
+      } else {
+        // Different accounts
+        const { data: oldAcc } = await supabase.from("accounts").select("balance").eq("id", oldAccountId).maybeSingle();
+        if (oldAcc) await supabase.from("accounts").update({ balance: oldAcc.balance - oldAmount }).eq("id", oldAccountId);
+        const { data: newAcc } = await supabase.from("accounts").select("balance").eq("id", updates.account_id).maybeSingle();
+        if (newAcc) await supabase.from("accounts").update({ balance: newAcc.balance + updates.amount }).eq("id", updates.account_id);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["transactions-all"] });
+      qc.invalidateQueries({ queryKey: ["accounts"] });
+    },
+  });
+};
+
+export const useDeleteTransaction = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, amount, accountId }: { id: string; amount: number; accountId: string }) => {
+      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      if (error) throw error;
+
+      // Reverse account balance
+      const { data: acc } = await supabase.from("accounts").select("balance").eq("id", accountId).maybeSingle();
+      if (acc) {
+        await supabase.from("accounts").update({ balance: acc.balance - amount }).eq("id", accountId);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["transactions-all"] });
       qc.invalidateQueries({ queryKey: ["accounts"] });
     },
   });
