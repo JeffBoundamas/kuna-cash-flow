@@ -6,7 +6,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { accounts, categories } from "@/lib/mock-data";
+import { useAccounts } from "@/hooks/use-accounts";
+import { useCategories } from "@/hooks/use-categories";
+import { useAddTransaction } from "@/hooks/use-transactions";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -19,31 +21,48 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
   const [type, setType] = useState<"expense" | "income">("expense");
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
-  const [accountId, setAccountId] = useState(accounts[0]?.id || "");
+  const [accountId, setAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [note, setNote] = useState("");
+
+  const { data: accounts = [] } = useAccounts();
+  const { data: categories = [] } = useCategories();
+  const addTransaction = useAddTransaction();
 
   const filteredCategories = categories.filter((c) =>
     type === "income" ? c.type === "Income" : c.type === "Expense"
   );
 
-  const handleSubmit = () => {
-    if (!amount || !categoryId) {
+  const handleSubmit = async () => {
+    const selectedAccount = accountId || accounts[0]?.id;
+    if (!amount || !categoryId || !selectedAccount) {
       toast({ title: "Veuillez remplir tous les champs obligatoires", variant: "destructive" });
       return;
     }
 
-    toast({
-      title: "Transaction ajoutée ✓",
-      description: `${label || "Transaction"} — ${amount} XAF`,
-    });
+    const numAmount = parseInt(amount);
+    const finalAmount = type === "expense" ? -Math.abs(numAmount) : Math.abs(numAmount);
 
-    // Reset
-    setAmount("");
-    setLabel("");
-    setCategoryId("");
-    setNote("");
-    onOpenChange(false);
+    try {
+      await addTransaction.mutateAsync({
+        account_id: selectedAccount,
+        category_id: categoryId,
+        amount: finalAmount,
+        label: label || "Transaction",
+        sms_reference: note || undefined,
+      });
+      toast({
+        title: "Transaction ajoutée ✓",
+        description: `${label || "Transaction"} — ${amount} XAF`,
+      });
+      setAmount("");
+      setLabel("");
+      setCategoryId("");
+      setNote("");
+      onOpenChange(false);
+    } catch {
+      toast({ title: "Erreur lors de l'ajout", variant: "destructive" });
+    }
   };
 
   return (
@@ -113,22 +132,26 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
             <label className="text-xs font-medium text-muted-foreground mb-1 block">
               Compte
             </label>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {accounts.map((acc) => (
-                <button
-                  key={acc.id}
-                  onClick={() => setAccountId(acc.id)}
-                  className={cn(
-                    "rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0",
-                    accountId === acc.id
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground"
-                  )}
-                >
-                  {acc.name}
-                </button>
-              ))}
-            </div>
+            {accounts.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Ajoutez d'abord un compte depuis le tableau de bord.</p>
+            ) : (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {accounts.map((acc) => (
+                  <button
+                    key={acc.id}
+                    onClick={() => setAccountId(acc.id)}
+                    className={cn(
+                      "rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0",
+                      (accountId || accounts[0]?.id) === acc.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground"
+                    )}
+                  >
+                    {acc.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Category */}
@@ -170,10 +193,11 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
 
           <Button
             onClick={handleSubmit}
+            disabled={addTransaction.isPending}
             className="w-full rounded-xl py-6 text-base font-semibold"
             size="lg"
           >
-            Enregistrer
+            {addTransaction.isPending ? "Enregistrement..." : "Enregistrer"}
           </Button>
         </div>
       </SheetContent>
