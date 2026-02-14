@@ -1,17 +1,20 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Wallet,
   TrendingUp,
   TrendingDown,
   Calendar,
   Sparkles,
+  Plus,
 } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { formatXAF, formatXAFShort, calculateResteAVivre } from "@/lib/currency";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useCategories } from "@/hooks/use-categories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import AddAccountSheet from "@/components/accounts/AddAccountSheet";
 
 const NATURE_COLORS: Record<string, string> = {
   Essential: "hsl(160, 84%, 30%)",
@@ -33,6 +36,7 @@ const Dashboard = () => {
   const { data: accounts = [], isLoading: loadingAccounts } = useAccounts();
   const { data: transactions = [], isLoading: loadingTx } = useTransactions(currentMonth, currentYear);
   const { data: categories = [] } = useCategories();
+  const [accountSheetOpen, setAccountSheetOpen] = useState(false);
 
   const totalBalance = useMemo(() => accounts.reduce((sum, a) => sum + a.balance, 0), [accounts]);
   const monthlyIncome = useMemo(() => transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0), [transactions]);
@@ -138,9 +142,14 @@ const Dashboard = () => {
 
       {/* Accounts */}
       <div className="animate-fade-in" style={{ animationDelay: "0.15s" }}>
-        <h2 className="text-sm font-semibold font-display text-muted-foreground mb-2">Mes Comptes</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold font-display text-muted-foreground">Mes Comptes</h2>
+          <Button size="sm" variant="ghost" onClick={() => setAccountSheetOpen(true)} className="h-7 w-7 p-0">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
         {accounts.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Aucun compte ajouté. Ajoutez un compte pour commencer.</p>
+          <p className="text-xs text-muted-foreground">Aucun compte ajouté. Appuyez sur + pour commencer.</p>
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
             {accounts.map((acc) => (
@@ -200,6 +209,8 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      <AddAccountSheet open={accountSheetOpen} onOpenChange={setAccountSheetOpen} />
     </div>
   );
 };
