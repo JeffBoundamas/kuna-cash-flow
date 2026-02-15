@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Accounts from "@/pages/Accounts";
 import CreancesTab from "@/components/obligations/CreancesTab";
@@ -13,7 +14,9 @@ const TABS = [
 type TabKey = (typeof TABS)[number]["key"];
 
 const Portfolio = () => {
-  const [activeTab, setActiveTab] = useState<TabKey>("comptes");
+  const [searchParams] = useSearchParams();
+  const initialTab = (TABS.find(t => t.key === searchParams.get("tab"))?.key ?? "comptes") as TabKey;
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
