@@ -135,10 +135,12 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 gap-3 scrollbar-hide">
-        <DialogHeader className="pb-0">
-          <DialogTitle className="font-display text-base">Ajout rapide</DialogTitle>
+      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden p-3 scrollbar-hide w-[calc(100vw-2rem)] sm:w-full !block">
+        <DialogHeader className="pb-1">
+          <DialogTitle className="font-display text-base text-center">Ajout rapide</DialogTitle>
         </DialogHeader>
+
+        <div className="flex flex-col gap-2.5 w-full min-w-0 overflow-hidden">
 
         {/* Type toggle */}
         <div className="flex rounded-xl bg-muted p-1 gap-1">
@@ -206,6 +208,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
         >
           {addTransaction.isPending ? "Enregistrement..." : "Enregistrer"}
         </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
