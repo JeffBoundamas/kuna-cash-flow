@@ -108,7 +108,7 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
       </div>
 
       {/* Footer */}
-      <div className="w-full max-w-lg px-6 pb-8 space-y-4">
+      <div className="w-full max-w-lg px-6 pb-8 space-y-4 relative z-[70]">
         {/* Progress dots */}
         <div className="flex justify-center gap-2">
           {Array.from({ length: totalSteps }).map((_, i) => (
