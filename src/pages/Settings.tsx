@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Mail, Phone, ChevronRight, ArrowDownCircle, ArrowUpCircle, Repeat, Download, Upload, FileText, Trash2 } from "lucide-react";
+import { LogOut, User, Mail, Phone, ChevronRight, ArrowDownCircle, ArrowUpCircle, Repeat, Download, Upload, FileText, Trash2, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRecurringTransactions } from "@/hooks/use-recurring-transactions";
 import { useCategories } from "@/hooks/use-categories";
@@ -167,6 +167,20 @@ const Settings = () => {
           </div>
         </div>
       )}
+
+      {/* Notifications */}
+      <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
+        <button
+          onClick={() => navigate("/notification-settings")}
+          className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Bell className="h-4.5 w-4.5 text-muted-foreground" />
+            <span className="text-sm font-medium">Paramètres de notifications</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </div>
 
       {/* Categories */}
       <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">

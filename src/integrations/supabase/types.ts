@@ -202,6 +202,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          cotisation_late: boolean
+          cotisation_reminder: boolean
+          created_at: string
+          id: string
+          obligation_late: boolean
+          obligation_reminder: boolean
+          pot_upcoming: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cotisation_late?: boolean
+          cotisation_reminder?: boolean
+          created_at?: string
+          id?: string
+          obligation_late?: boolean
+          obligation_reminder?: boolean
+          pot_upcoming?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cotisation_late?: boolean
+          cotisation_reminder?: boolean
+          created_at?: string
+          id?: string
+          obligation_late?: boolean
+          obligation_reminder?: boolean
+          pot_upcoming?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string

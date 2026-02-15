@@ -21,6 +21,7 @@ import More from "@/pages/More";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound";
 import NotificationsPage from "@/pages/Notifications";
+import NotificationSettings from "@/pages/NotificationSettings";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/categories" element={<Categories />} />
                       <Route path="/notifications" element={<NotificationsPage />} />
+                      <Route path="/notification-settings" element={<NotificationSettings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AppLayout>
