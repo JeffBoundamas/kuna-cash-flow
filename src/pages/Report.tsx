@@ -175,11 +175,11 @@ const Report = () => {
     }).join("");
 
     const incomeRows = incomeTxs.map((t, i) =>
-      `<tr class="${i % 2 ? 'alt' : ''}"><td>ENT-${year}-${String(i + 1).padStart(3, "0")}</td><td>${new Date(t.date).toLocaleDateString("fr-FR")}</td><td>${catMap.get(t.category_id)?.name ?? "-"}</td><td>${t.label}</td><td class="r">${formatXAF(t.amount)}</td></tr>`
+      `<tr class="${i % 2 ? 'alt' : ''}"><td>ENT-${year}-${String(i + 1).padStart(3, "0")}</td><td>${new Date(t.date).toLocaleDateString("fr-FR")}</td><td>${catMap.get(t.category_id)?.name ?? "-"}</td><td>${t.label}</td><td class="r green">${formatXAF(t.amount)}</td></tr>`
     ).join("");
 
     const expenseRows = expenseTxs.map((t, i) =>
-      `<tr class="${i % 2 ? 'alt' : ''}"><td>DEP-${year}-${String(i + 1).padStart(3, "0")}</td><td>${new Date(t.date).toLocaleDateString("fr-FR")}</td><td>${catMap.get(t.category_id)?.name ?? "-"}</td><td>${t.label}</td><td class="r">${formatXAF(Math.abs(t.amount))}</td></tr>`
+      `<tr class="${i % 2 ? 'alt' : ''}"><td>DEP-${year}-${String(i + 1).padStart(3, "0")}</td><td>${new Date(t.date).toLocaleDateString("fr-FR")}</td><td>${catMap.get(t.category_id)?.name ?? "-"}</td><td>${t.label}</td><td class="r red">${formatXAF(Math.abs(t.amount))}</td></tr>`
     ).join("");
 
     const engRows = activeEngagements.map((o) => {
@@ -192,7 +192,75 @@ const Report = () => {
       return `<tr><td>${o.person_name}</td><td>${o.description || "-"}</td><td class="r">${formatXAF(o.remaining_amount)}</td><td>${o.due_date ? new Date(o.due_date).toLocaleDateString("fr-FR") : "-"}</td><td style="color:${s.label === "En retard" ? "#dc2626" : "#16a34a"}">${s.label}</td></tr>`;
     }).join("");
 
-    const totalPages = 2 + (activeEngagements.length + activeCreances.length > 0 ? 1 : 0);
+    // Generate inline SVG charts
+    const maxVal = Math.max(stats.income, stats.expenses) || 1;
+    const barW1 = Math.round((stats.income / maxVal) * 280);
+    const barW2 = Math.round((stats.expenses / maxVal) * 280);
+    const barChartSVG = `<svg width="320" height="80" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="5" width="${barW1}" height="28" rx="4" fill="#16a34a"/>
+      <text x="${barW1 + 8}" y="24" font-size="11" fill="#1a1a1a" font-weight="600">${formatXAF(stats.income)}</text>
+      <rect x="0" y="45" width="${barW2}" height="28" rx="4" fill="#dc2626"/>
+      <text x="${barW2 + 8}" y="64" font-size="11" fill="#1a1a1a" font-weight="600">${formatXAF(stats.expenses)}</text>
+    </svg>`;
+
+    const generatePieSVG = (data: {name: string; value: number; pct: string}[], colors: string[]) => {
+      const total = data.reduce((s, d) => s + d.value, 0);
+      if (total === 0) return "";
+      let cumAngle = -90;
+      const slices = data.map((d, i) => {
+        const angle = (d.value / total) * 360;
+        const startAngle = cumAngle;
+        cumAngle += angle;
+        const endAngle = cumAngle;
+        const startRad = (startAngle * Math.PI) / 180;
+        const endRad = (endAngle * Math.PI) / 180;
+        const cx = 60, cy = 60, r = 55;
+        const x1 = cx + r * Math.cos(startRad);
+        const y1 = cy + r * Math.sin(startRad);
+        const x2 = cx + r * Math.cos(endRad);
+        const y2 = cy + r * Math.sin(endRad);
+        const largeArc = angle > 180 ? 1 : 0;
+        if (angle >= 359.9) {
+          return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${colors[i % colors.length]}" />`;
+        }
+        return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z" fill="${colors[i % colors.length]}" />`;
+      }).join("");
+      const legend = data.map((d, i) =>
+        `<div style="display:flex;align-items:center;gap:4px;font-size:10px;margin-bottom:2px;">
+          <div style="width:8px;height:8px;border-radius:2px;background:${colors[i % colors.length]};flex-shrink:0;"></div>
+          <span style="color:#666;">${d.name}: ${d.pct}%</span>
+        </div>`
+      ).join("");
+      return `<div style="display:flex;align-items:center;gap:16px;">
+        <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">${slices}</svg>
+        <div>${legend}</div>
+      </div>`;
+    };
+
+    const pieColors = ["#16a34a","#d4af37","#3b82f6","#dc2626","#8b5cf6","#f97316","#14b8a6","#ec4899","#6366f1","#64748b"];
+    const catPieData = stats.sortedCats.map(([name, value]) => ({
+      name, value, pct: stats.expenses > 0 ? ((value / stats.expenses) * 100).toFixed(1) : "0"
+    }));
+    const pmPieData = stats.sortedPMs.map(([name, value]) => ({
+      name, value, pct: stats.expenses > 0 ? ((value / stats.expenses) * 100).toFixed(1) : "0"
+    }));
+
+    const visualSection = stats.count > 0 ? `
+    <h2>Visualisations</h2>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="flex:1;min-width:200px;">
+        <h3 style="font-size:12px;margin:0 0 8px;color:#059669;">Entrées vs Dépenses</h3>
+        ${barChartSVG}
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <h3 style="font-size:12px;margin:0 0 8px;color:#059669;">Dépenses par Catégorie</h3>
+        ${generatePieSVG(catPieData, pieColors)}
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <h3 style="font-size:12px;margin:0 0 8px;color:#059669;">Moyens de Paiement</h3>
+        ${generatePieSVG(pmPieData, pieColors.slice(3))}
+      </div>
+    </div>` : "";
 
     const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
 <title>Rapport Financier - ${monthLabel}</title>
@@ -233,6 +301,8 @@ tr.alt td { background:#f9fafb; }
 <tr><td>- Engagements à payer</td><td class="red">-${formatXAF(totalEngagements)}</td></tr>
 <tr style="border-top:2px solid #059669"><td><strong>= Solde prévisionnel</strong></td><td style="font-size:13px;color:${soldePrevisionnel >= 0 ? '#16a34a' : '#dc2626'}"><strong>${soldePrevisionnel >= 0 ? "+" : ""}${formatXAF(soldePrevisionnel)}</strong></td></tr>
 </tbody></table>
+
+${visualSection}
 
 <div class="page-break"></div>
 
