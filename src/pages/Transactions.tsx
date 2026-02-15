@@ -16,6 +16,7 @@ import AddTransactionSheet from "@/components/transactions/AddTransactionSheet";
 import EditTransactionSheet from "@/components/transactions/EditTransactionSheet";
 import SwipeableRow from "@/components/transactions/SwipeableRow";
 import TransactionFilterBar, { emptyFilters, type TransactionFilters } from "@/components/transactions/TransactionFilterBar";
+import TransactionSummary from "@/components/transactions/TransactionSummary";
 import { toast } from "@/hooks/use-toast";
 import type { Transaction } from "@/lib/types";
 
@@ -35,6 +36,10 @@ const Transactions = () => {
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
+      // Nature filter
+      if (filters.nature === "income" && t.amount <= 0) return false;
+      if (filters.nature === "expense" && t.amount >= 0) return false;
+
       // Search by label, note, amount, or category
       if (search) {
         const q = search.toLowerCase();
@@ -145,6 +150,13 @@ const Transactions = () => {
         onChange={setFilters}
         accounts={accounts}
         categories={categories}
+      />
+
+      {/* Summary */}
+      <TransactionSummary
+        transactions={sorted}
+        catMap={catMap}
+        accMap={accMap}
       />
 
       {/* Transaction List */}

@@ -3,7 +3,10 @@ import { Filter, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Account, Category } from "@/lib/types";
 
+export type NatureFilter = "all" | "income" | "expense";
+
 export interface TransactionFilters {
+  nature: NatureFilter;
   dateFrom: string;
   dateTo: string;
   categoryId: string;
@@ -11,6 +14,7 @@ export interface TransactionFilters {
 }
 
 const emptyFilters: TransactionFilters = {
+  nature: "all",
   dateFrom: "",
   dateTo: "",
   categoryId: "",
@@ -24,33 +28,66 @@ interface TransactionFilterBarProps {
   categories: Category[];
 }
 
+const natureOptions: { value: NatureFilter; label: string }[] = [
+  { value: "all", label: "Tous" },
+  { value: "income", label: "Revenus" },
+  { value: "expense", label: "Dépenses" },
+];
+
 const TransactionFilterBar = ({ filters, onChange, accounts, categories }: TransactionFilterBarProps) => {
   const [expanded, setExpanded] = useState(false);
-  const hasFilters = filters.dateFrom || filters.dateTo || filters.categoryId || filters.accountId;
+  const hasFilters = filters.dateFrom || filters.dateTo || filters.categoryId || filters.accountId || filters.nature !== "all";
+
+  // Filter categories based on selected nature
+  const visibleCategories = categories.filter((c) => {
+    if (filters.nature === "income") return c.type === "Income";
+    if (filters.nature === "expense") return c.type === "Expense";
+    return true;
+  });
 
   return (
     <div className="space-y-2">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className={cn(
-          "flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all",
-          hasFilters
-            ? "border-primary bg-primary/10 text-primary"
-            : "border-border text-muted-foreground"
-        )}
-      >
-        <Filter className="h-3.5 w-3.5" />
-        Filtres
-        {hasFilters && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onChange(emptyFilters); }}
-            className="ml-1"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        )}
-        <ChevronDown className={cn("h-3 w-3 transition-transform", expanded && "rotate-180")} />
-      </button>
+      {/* Primary nature filter */}
+      <div className="flex items-center gap-2">
+        <div className="flex rounded-lg border border-border overflow-hidden">
+          {natureOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => onChange({ ...filters, nature: opt.value, categoryId: "" })}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium transition-all",
+                filters.nature === opt.value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className={cn(
+            "flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ml-auto",
+            hasFilters
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border text-muted-foreground"
+          )}
+        >
+          <Filter className="h-3.5 w-3.5" />
+          Filtres
+          {hasFilters && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onChange(emptyFilters); }}
+              className="ml-1"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+          <ChevronDown className={cn("h-3 w-3 transition-transform", expanded && "rotate-180")} />
+        </button>
+      </div>
 
       {expanded && (
         <div className="rounded-xl border border-border bg-card p-3 space-y-3 animate-fade-in">
@@ -119,7 +156,7 @@ const TransactionFilterBar = ({ filters, onChange, accounts, categories }: Trans
               >
                 Toutes
               </button>
-              {categories.filter(c => c.type === "Expense").map((cat) => (
+              {visibleCategories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => onChange({ ...filters, categoryId: cat.id })}
