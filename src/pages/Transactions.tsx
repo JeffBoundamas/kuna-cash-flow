@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  
   Search,
   TrendingUp,
   TrendingDown,
   Wallet,
+  BarChart3,
 } from "lucide-react";
 import { formatXAF, formatXAFShort } from "@/lib/currency";
 import { useAllTransactions, useDeleteTransaction } from "@/hooks/use-transactions";
@@ -20,6 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Transaction } from "@/lib/types";
 
 const Transactions = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState<Transaction | null>(null);
@@ -108,7 +110,16 @@ const Transactions = () => {
     <div className="px-4 pt-6 space-y-4 pb-24">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold font-display">Mouvements</h1>
-        <span className="text-xs text-muted-foreground">{sorted.length} transactions</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{sorted.length} transactions</span>
+          <button
+            onClick={() => navigate("/report")}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Rapports"
+          >
+            <BarChart3 className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </div>
       </div>
 
       {/* Running balance per account */}

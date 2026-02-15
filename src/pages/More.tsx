@@ -1,9 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Target, FileText, Settings, Download, ChevronRight } from "lucide-react";
+import { Target, Settings, Download, ChevronRight } from "lucide-react";
 
 const items = [
   { to: "/goals", icon: Target, label: "Objectifs d'épargne" },
-  { to: "/report", icon: FileText, label: "Rapports" },
   { to: "/settings", icon: Settings, label: "Paramètres" },
   { to: "/export", icon: Download, label: "Exporter mes données", placeholder: true },
 ];
