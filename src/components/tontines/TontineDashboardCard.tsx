@@ -97,7 +97,7 @@ const TontineDashboardCard = () => {
 
   return (
     <button
-      onClick={() => navigate("/portfolio")}
+      onClick={() => navigate("/portfolio?tab=tontines")}
       className="w-full rounded-xl border border-gold/30 bg-gold-muted p-4 text-left hover:shadow-sm transition-shadow active:scale-[0.98] animate-fade-in"
     >
       <div className="flex items-center justify-between mb-3">
