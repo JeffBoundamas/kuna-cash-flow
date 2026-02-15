@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
   const [dueDate, setDueDate] = useState(ob.due_date || "");
   const [confidence, setConfidence] = useState<ObligationConfidence>(ob.confidence);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showConfirm, setShowConfirm] = useState(false);
   const updateOb = useUpdateObligation();
 
   useEffect(() => {
@@ -31,6 +33,7 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
       setDueDate(ob.due_date || "");
       setConfidence(ob.confidence);
       setErrors({});
+      setShowConfirm(false);
     }
   }, [open, ob]);
 
@@ -49,9 +52,13 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = async () => {
+  const handleConfirmClick = () => {
     if (!validate()) return;
+    setShowConfirm(true);
+  };
 
+  const handleSave = async () => {
+    setShowConfirm(false);
     const numAmount = Number(amount);
     try {
       await updateOb.mutateAsync({
@@ -150,11 +157,26 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
             </div>
           )}
 
-          <Button onClick={handleSave} className="w-full" disabled={updateOb.isPending}>
+          <Button onClick={handleConfirmClick} className="w-full" disabled={updateOb.isPending}>
             {updateOb.isPending ? "Enregistrement..." : "Enregistrer les modifications"}
           </Button>
         </div>
       </SheetContent>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display">Confirmer la modification</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voulez-vous vraiment modifier {isCreance ? "cette créance" : "cet engagement"} pour <span className="font-semibold text-foreground">{personName.trim()}</span> ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSave}>Confirmer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 };
