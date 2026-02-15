@@ -103,10 +103,17 @@ export const useAddFundsToGoal = () => {
         .update({ balance: account.balance - amount })
         .eq("id", accountId);
       if (updateAccErr) throw updateAccErr;
+
+      // Track contribution
+      const { error: contribErr } = await supabase
+        .from("goal_contributions")
+        .insert([{ user_id: (await supabase.auth.getUser()).data.user!.id, goal_id: goalId, account_id: accountId, amount }]);
+      if (contribErr) throw contribErr;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
       qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["monthly-savings"] });
     },
   });
 };

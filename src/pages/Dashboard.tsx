@@ -6,6 +6,7 @@ import { useAccounts } from "@/hooks/use-accounts";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useCategories } from "@/hooks/use-categories";
 import { useMonthlySummary } from "@/hooks/use-monthly-summary";
+import { useMonthlySavings } from "@/hooks/use-monthly-savings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { formatXAFShort } from "@/lib/currency";
@@ -25,6 +26,7 @@ const Dashboard = () => {
   const { data: transactions = [], isLoading: loadingTx } = useTransactions(currentMonth, currentYear);
   const { data: categories = [] } = useCategories();
   const { data: monthlySummary = [] } = useMonthlySummary(6);
+  const { data: monthlySavings = 0 } = useMonthlySavings();
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
 
   const totalBalance = useMemo(() => accounts.reduce((sum, a) => sum + a.balance, 0), [accounts]);
@@ -81,7 +83,7 @@ const Dashboard = () => {
       </div>
 
       {/* Savings Rate */}
-      <SavingsRate monthlyIncome={monthlyIncome} monthlyExpenses={monthlyExpenses} />
+      <SavingsRate monthlyIncome={monthlyIncome} monthlySavings={monthlySavings} />
 
       {/* Accounts */}
       <div className="animate-fade-in" style={{ animationDelay: "0.12s" }}>
