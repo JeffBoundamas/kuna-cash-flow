@@ -18,7 +18,11 @@ const PaymentMethodPicker = ({ methods, selectedId, onSelect, label = "Moyen de 
   return (
     <div>
       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{label}</label>
-      <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide max-w-full">
+      <div
+        className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide max-w-full"
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+      >
         {methods.map((pm) => {
           const Icon = (icons as any)[pm.icon] || (icons as any)["Wallet"];
           const isSelected = selectedId === pm.id;
