@@ -129,7 +129,7 @@ const Report = () => {
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Rapport Financier - ${periodLabel}</title>
+  <title>Kuna - Rapport Financier - ${periodLabel}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 700px; margin: 30px auto; color: #1a1a1a; font-size: 13px; }
     h1 { font-size: 18px; margin-bottom: 2px; }
