@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Sparkles, Calendar, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Sparkles, Calendar, Plus, Settings } from "lucide-react";
 import { formatXAF } from "@/lib/currency";
 import { calculateResteAVivre } from "@/lib/currency";
 import { useAccounts } from "@/hooks/use-accounts";
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const { data: monthlySummary = [] } = useMonthlySummary(6);
   const { data: monthlySavings = 0 } = useMonthlySavings();
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
+  const navigate = useNavigate();
 
   const totalBalance = useMemo(() => accounts.reduce((sum, a) => sum + a.balance, 0), [accounts]);
   const monthlyIncome = useMemo(() => transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0), [transactions]);
@@ -60,8 +62,13 @@ const Dashboard = () => {
           <p className="text-sm text-muted-foreground">Bonjour 👋</p>
           <h1 className="text-xl font-bold font-display">Kuna Finance</h1>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <Sparkles className="h-5 w-5" />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/settings")}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
@@ -98,11 +105,15 @@ const Dashboard = () => {
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
             {accounts.map((acc) => (
-              <div key={acc.id} className="min-w-[140px] rounded-xl border border-border bg-card p-3 flex-shrink-0">
+              <button
+                key={acc.id}
+                onClick={() => navigate("/accounts")}
+                className="min-w-[140px] rounded-xl border border-border bg-card p-3 flex-shrink-0 text-left hover:shadow-sm transition-shadow active:scale-[0.98]"
+              >
                 <p className="text-[11px] text-muted-foreground truncate">{acc.type}</p>
                 <p className="text-sm font-semibold truncate">{acc.name}</p>
                 <p className="text-sm font-bold font-display mt-1 text-primary">{formatXAFShort(acc.balance)}</p>
-              </div>
+              </button>
             ))}
           </div>
         )}
