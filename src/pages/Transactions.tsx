@@ -16,7 +16,6 @@ import AddTransactionSheet from "@/components/transactions/AddTransactionSheet";
 import EditTransactionSheet from "@/components/transactions/EditTransactionSheet";
 import SwipeableRow from "@/components/transactions/SwipeableRow";
 import TransactionFilterBar, { emptyFilters, type TransactionFilters } from "@/components/transactions/TransactionFilterBar";
-import TransactionSummary from "@/components/transactions/TransactionSummary";
 import { toast } from "@/hooks/use-toast";
 import type { Transaction } from "@/lib/types";
 
@@ -144,19 +143,10 @@ const Transactions = () => {
         />
       </div>
 
-      {/* Filters */}
+      {/* Nature filter only */}
       <TransactionFilterBar
         filters={filters}
         onChange={setFilters}
-        accounts={accounts}
-        categories={categories}
-      />
-
-      {/* Summary */}
-      <TransactionSummary
-        transactions={sorted}
-        catMap={catMap}
-        accMap={accMap}
       />
 
       {/* Transaction List */}
