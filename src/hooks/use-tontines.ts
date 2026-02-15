@@ -154,19 +154,29 @@ export const useLogContribution = () => {
       });
       if (error) throw error;
 
-      // Find tontine category
-      const { data: categories } = await supabase
+      // Find or create tontine category
+      let { data: category } = await supabase
         .from("categories")
         .select("id")
         .eq("name", "Tontine")
+        .eq("user_id", user.id)
         .maybeSingle();
 
+      if (!category) {
+        const { data: newCat } = await supabase
+          .from("categories")
+          .insert({ user_id: user.id, name: "Tontine", type: "Expense" as const, nature: "Savings" as const, color: "yellow" })
+          .select("id")
+          .single();
+        category = newCat;
+      }
+
       // Create corresponding expense transaction
-      if (categories) {
+      if (category) {
         await supabase.from("transactions").insert({
           user_id: user.id,
           account_id: input.linked_account_id,
-          category_id: categories.id,
+          category_id: category.id,
           amount: -input.amount,
           label: `Cotisation - ${input.tontine_name}`,
           status: "Realized" as const,
@@ -225,19 +235,29 @@ export const useReceivePot = () => {
         .update({ has_received_pot: true })
         .eq("id", input.member_id);
 
-      // Find tontine category
-      const { data: categories } = await supabase
+      // Find or create tontine category
+      let { data: category } = await supabase
         .from("categories")
         .select("id")
         .eq("name", "Tontine")
+        .eq("user_id", user.id)
         .maybeSingle();
 
+      if (!category) {
+        const { data: newCat } = await supabase
+          .from("categories")
+          .insert({ user_id: user.id, name: "Tontine", type: "Expense" as const, nature: "Savings" as const, color: "yellow" })
+          .select("id")
+          .single();
+        category = newCat;
+      }
+
       // Create income transaction
-      if (categories) {
+      if (category) {
         await supabase.from("transactions").insert({
           user_id: user.id,
           account_id: input.linked_account_id,
-          category_id: categories.id,
+          category_id: category.id,
           amount: input.amount,
           label: `Pot reçu - ${input.tontine_name}`,
           status: "Realized" as const,
