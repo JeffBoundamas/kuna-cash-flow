@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,10 @@ const AddObligationSheet = ({ open, onOpenChange, defaultType = "creance" }: Pro
   const [dueDate, setDueDate] = useState("");
   const [confidence, setConfidence] = useState<ObligationConfidence>("certain");
   const addOb = useAddObligation();
+
+  useEffect(() => {
+    if (open) setType(defaultType);
+  }, [open, defaultType]);
 
   const reset = () => {
     setPersonName("");
