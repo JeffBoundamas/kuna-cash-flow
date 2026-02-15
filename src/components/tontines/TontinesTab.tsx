@@ -1,21 +1,14 @@
-import { useState, useMemo, useCallback } from "react";
-import { Plus, PiggyBank, Users, HandCoins, Gift, Trash2, ArrowLeft } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, PiggyBank, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatXAF } from "@/lib/currency";
-import { useTontines, useTontineMembers, useTontinePayments, useDeleteTontine } from "@/hooks/use-tontines";
-import { useAccounts } from "@/hooks/use-accounts";
+import { useTontines, useTontineMembers } from "@/hooks/use-tontines";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import TontineTimeline from "./TontineTimeline";
 import CreateTontineSheet from "./CreateTontineSheet";
-import LogContributionSheet from "./LogContributionSheet";
-import ReceivePotSheet from "./ReceivePotSheet";
-import TontineCelebration from "./TontineCelebration";
+import TontineDetailView from "./TontineDetailView";
 import type { Tontine } from "@/lib/tontine-types";
-import { toast } from "sonner";
 
 /* ─── INLINE TONTINE CARD WITH DOT TIMELINE ─────────────────── */
 const TontineListCard = ({ tontine, onTap }: { tontine: Tontine; onTap: () => void }) => {
@@ -87,209 +80,6 @@ const TontineListCard = ({ tontine, onTap }: { tontine: Tontine; onTap: () => vo
   );
 };
 
-/* ─── TONTINE DETAIL (INLINE) ────────────────────────────────── */
-const TontineDetailInline = ({ tontine, onBack }: { tontine: Tontine; onBack: () => void }) => {
-  const { data: members = [] } = useTontineMembers(tontine.id);
-  const { data: payments = [] } = useTontinePayments(tontine.id);
-  const { data: accounts = [] } = useAccounts();
-  const deleteTontine = useDeleteTontine();
-
-  const [showContribution, setShowContribution] = useState(false);
-  const [showReceivePot, setShowReceivePot] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
-
-  const handleCelebrationDone = useCallback(() => setShowCelebration(false), []);
-
-  const myMember = useMemo(() => members.find(m => m.is_current_user), [members]);
-  const isMyTurn = myMember && myMember.position_in_order === tontine.current_cycle;
-  const potAmount = tontine.contribution_amount * tontine.total_members;
-
-  const myContributions = useMemo(
-    () => payments.filter(p => p.type === "contribution"),
-    [payments]
-  );
-  const potReceivedPayments = useMemo(
-    () => payments.filter(p => p.type === "pot_received"),
-    [payments]
-  );
-  const totalContributed = useMemo(
-    () => myContributions.reduce((s, p) => s + p.amount, 0),
-    [myContributions]
-  );
-  const totalExpected = tontine.contribution_amount * tontine.total_members;
-  const contributionPercent = totalExpected > 0 ? Math.min(100, Math.round((totalContributed / totalExpected) * 100)) : 0;
-
-  const accMap = new Map(accounts.map(a => [a.id, a]));
-
-  const myPayoutInfo = useMemo(() => {
-    if (!myMember) return null;
-    if (myMember.has_received_pot) return "Déjà reçu ✓";
-    if (myMember.payout_date) {
-      return new Date(myMember.payout_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-    }
-    return `Position ${myMember.position_in_order}`;
-  }, [myMember]);
-
-  const remainingCycles = tontine.total_members - myContributions.length;
-
-  const handleDelete = () => {
-    if (!confirm("Supprimer cette tontine ?")) return;
-    deleteTontine.mutate(tontine.id, {
-      onSuccess: () => {
-        toast.success("Tontine supprimée");
-        onBack();
-      },
-    });
-  };
-
-  return (
-    <div className="px-4 pt-4 pb-24 space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <button onClick={onBack} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-          <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-bold font-display truncate">{tontine.name}</h1>
-          <p className="text-xs text-muted-foreground">
-            {tontine.frequency === "monthly" ? "Mensuelle" : "Hebdomadaire"} · Cycle {tontine.current_cycle}/{tontine.total_members}
-          </p>
-        </div>
-        <Badge className={cn(
-          "text-[10px]",
-          tontine.status === "active" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-        )}>
-          {tontine.status === "active" ? "Active" : "Terminée"}
-        </Badge>
-        <button onClick={handleDelete} className="text-muted-foreground hover:text-destructive p-1.5">
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Pot amount hero */}
-      <Card className="p-4 text-center border-gold/30 bg-gold-muted">
-        <p className="text-xs text-muted-foreground">Pot total</p>
-        <p className="text-2xl font-bold font-display text-gold">{formatXAF(potAmount)}</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {tontine.total_members} × {formatXAF(tontine.contribution_amount)}
-        </p>
-      </Card>
-
-      {/* Timeline */}
-      <div>
-        <h2 className="text-sm font-semibold font-display text-muted-foreground mb-2">Ordre de passage</h2>
-        <TontineTimeline members={members} currentCycle={tontine.current_cycle} />
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
-          <p className="text-[10px] text-muted-foreground">Versé</p>
-          <p className="text-sm font-bold font-display">{formatXAF(totalContributed)}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
-          <p className="text-[10px] text-muted-foreground">Restant</p>
-          <p className="text-sm font-bold font-display">{remainingCycles} tour{remainingCycles > 1 ? "s" : ""}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
-          <p className="text-[10px] text-muted-foreground">Mon tour</p>
-          <p className={cn("text-xs font-bold", myMember?.has_received_pot ? "text-primary" : "text-gold")}>
-            {myPayoutInfo ?? "—"}
-          </p>
-        </div>
-      </div>
-
-      {/* Progress */}
-      {contributionPercent > 0 && (
-        <div>
-          <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-            <span>Cotisations {contributionPercent}%</span>
-            <span>{formatXAF(totalContributed)} / {formatXAF(totalExpected)}</span>
-          </div>
-          <Progress value={contributionPercent} className="h-2" />
-        </div>
-      )}
-
-      {/* Action buttons */}
-      {tontine.status === "active" && (
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="h-12" onClick={() => setShowContribution(true)}>
-            <HandCoins className="h-4 w-4 mr-2" />
-            Cotiser
-          </Button>
-          <Button
-            className="h-12 bg-gold hover:bg-gold/90 text-gold-foreground"
-            onClick={() => setShowReceivePot(true)}
-            disabled={!isMyTurn || myMember?.has_received_pot}
-          >
-            <Gift className="h-4 w-4 mr-2" />
-            {isMyTurn ? "Pot reçu !" : "Pas mon tour"}
-          </Button>
-        </div>
-      )}
-
-      {/* Payment history */}
-      <div>
-        <h2 className="text-sm font-semibold font-display text-muted-foreground mb-2">Historique des paiements</h2>
-        {payments.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-6">Aucun paiement enregistré</p>
-        ) : (
-          <div className="space-y-2">
-            {payments.map(p => (
-              <div key={p.id} className="rounded-lg border border-border bg-card p-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">
-                    {p.type === "contribution" ? `Cotisation — Cycle ${p.cycle_number}` : "Pot reçu 🎉"}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {new Date(p.payment_date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
-                    {p.linked_account_id && accMap.has(p.linked_account_id) && ` · ${accMap.get(p.linked_account_id)!.name}`}
-                  </p>
-                </div>
-                <p className={cn(
-                  "text-sm font-semibold",
-                  p.type === "contribution" ? "text-destructive" : "text-primary"
-                )}>
-                  {p.type === "contribution" ? "-" : "+"}{formatXAF(p.amount)}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Sheets */}
-      <LogContributionSheet
-        open={showContribution}
-        onOpenChange={setShowContribution}
-        tontineId={tontine.id}
-        tontineName={tontine.name}
-        amount={tontine.contribution_amount}
-        currentCycle={tontine.current_cycle}
-      />
-
-      {myMember && (
-        <ReceivePotSheet
-          open={showReceivePot}
-          onOpenChange={setShowReceivePot}
-          tontineId={tontine.id}
-          tontineName={tontine.name}
-          potAmount={potAmount}
-          currentCycle={tontine.current_cycle}
-          memberId={myMember.id}
-          onPotReceived={() => setShowCelebration(true)}
-        />
-      )}
-
-      <TontineCelebration
-        show={showCelebration}
-        onDone={handleCelebrationDone}
-        potAmount={formatXAF(potAmount)}
-      />
-    </div>
-  );
-};
-
 /* ─── MAIN TONTINES TAB ──────────────────────────────────────── */
 const TontinesTab = () => {
   const [selected, setSelected] = useState<Tontine | null>(null);
@@ -312,11 +102,10 @@ const TontinesTab = () => {
     }, 0);
   }, [activeTontines]);
 
-  // Use fresh data for detail view
   const freshSelected = selected ? tontines.find(t => t.id === selected.id) ?? selected : null;
 
   if (freshSelected) {
-    return <TontineDetailInline tontine={freshSelected} onBack={() => setSelected(null)} />;
+    return <TontineDetailView tontine={freshSelected} onBack={() => setSelected(null)} />;
   }
 
   return (
