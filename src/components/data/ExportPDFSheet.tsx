@@ -62,7 +62,7 @@ const ExportPDFSheet = ({ open, onOpenChange }: Props) => {
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>kuna.${now.toISOString().slice(0, 10).replace(/-/g, "")}.resume-mensuel</title>
+  <title>Résumé financier - ${monthName}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 40px auto; color: #1a1a1a; }
     h1 { font-size: 20px; margin-bottom: 4px; }

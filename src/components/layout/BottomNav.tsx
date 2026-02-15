@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 const tabs = [
   { to: "/", icon: LayoutDashboard, label: "Tableau" },
   { to: "/transactions", icon: ArrowLeftRight, label: "Mouvements" },
-  { to: "/portfolio", icon: Wallet, label: "Portefeuille" },
   { to: "/budget", icon: PieChart, label: "Budget" },
+  { to: "/portfolio", icon: Wallet, label: "Portefeuille" },
   { to: "/more", icon: MoreHorizontal, label: "Plus" },
 ];
 

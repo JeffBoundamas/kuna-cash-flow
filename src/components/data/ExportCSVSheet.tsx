@@ -52,8 +52,7 @@ const ExportCSVSheet = ({ open, onOpenChange }: Props) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    a.download = `kuna.${today}.transactions.csv`;
+    a.download = `transactions_${dateFrom}_${dateTo}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     onOpenChange(false);
