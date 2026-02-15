@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Transactions from "@/pages/Transactions";
+import Accounts from "@/pages/Accounts";
 import BudgetPage from "@/pages/Budget";
 import GoalsPage from "@/pages/Goals";
 import Settings from "@/pages/Settings";
@@ -34,6 +35,7 @@ const App = () => (
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/transactions" element={<Transactions />} />
+                      <Route path="/accounts" element={<Accounts />} />
                       <Route path="/budget" element={<BudgetPage />} />
                       <Route path="/goals" element={<GoalsPage />} />
                       <Route path="/settings" element={<Settings />} />

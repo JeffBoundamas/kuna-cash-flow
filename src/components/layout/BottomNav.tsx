@@ -1,13 +1,13 @@
 import { NavLink as RouterNavLink } from "react-router-dom";
-import { LayoutDashboard, ArrowLeftRight, PieChart, Target, UserCircle } from "lucide-react";
+import { LayoutDashboard, ArrowLeftRight, PieChart, Target, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/", icon: LayoutDashboard, label: "Tableau" },
   { to: "/transactions", icon: ArrowLeftRight, label: "Mouvements" },
+  { to: "/accounts", icon: Wallet, label: "Comptes" },
   { to: "/budget", icon: PieChart, label: "Budget" },
   { to: "/goals", icon: Target, label: "Objectifs" },
-  { to: "/settings", icon: UserCircle, label: "Profil" },
 ];
 
 const BottomNav = () => {
