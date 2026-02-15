@@ -81,87 +81,89 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
   const isCreance = ob.type === "creance";
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="font-display">
-            {isCreance ? "Modifier la créance" : "Modifier l'engagement"}
-          </SheetTitle>
-        </SheetHeader>
-        <div className="space-y-4 mt-4">
-          <div>
-            <Label>Nom de la personne</Label>
-            <Input
-              value={personName}
-              onChange={(e) => {
-                setPersonName(e.target.value);
-                if (errors.personName) setErrors(prev => ({ ...prev, personName: "" }));
-              }}
-              className={cn(errors.personName && "border-destructive focus-visible:ring-destructive")}
-            />
-            {errors.personName && (
-              <p className="text-xs text-destructive mt-1">{errors.personName}</p>
-            )}
-          </div>
-
-          <div>
-            <Label>Montant total (FCFA)</Label>
-            <Input
-              type="number"
-              inputMode="numeric"
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                if (errors.amount) setErrors(prev => ({ ...prev, amount: "" }));
-              }}
-              className={cn(errors.amount && "border-destructive focus-visible:ring-destructive")}
-            />
-            {errors.amount && (
-              <p className="text-xs text-destructive mt-1">{errors.amount}</p>
-            )}
-          </div>
-
-          <div>
-            <Label>Description (optionnel)</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
-          </div>
-
-          <div>
-            <Label>Date d'échéance (optionnel)</Label>
-            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-          </div>
-
-          {isCreance && (
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display">
+              {isCreance ? "Modifier la créance" : "Modifier l'engagement"}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="space-y-4 mt-4">
             <div>
-              <Label>Niveau de certitude</Label>
-              <div className="flex gap-2 mt-1.5">
-                {([
-                  { value: "certain", label: "Certain", color: "bg-emerald-600" },
-                  { value: "probable", label: "Probable", color: "bg-amber-500" },
-                  { value: "uncertain", label: "Incertain", color: "bg-destructive" },
-                ] as const).map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setConfidence(opt.value)}
-                    className={cn(
-                      "flex-1 rounded-lg py-2 text-xs font-medium transition-all border",
-                      confidence === opt.value
-                        ? `${opt.color} text-white border-transparent`
-                        : "border-border text-muted-foreground"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+              <Label>Nom de la personne</Label>
+              <Input
+                value={personName}
+                onChange={(e) => {
+                  setPersonName(e.target.value);
+                  if (errors.personName) setErrors(prev => ({ ...prev, personName: "" }));
+                }}
+                className={cn(errors.personName && "border-destructive focus-visible:ring-destructive")}
+              />
+              {errors.personName && (
+                <p className="text-xs text-destructive mt-1">{errors.personName}</p>
+              )}
             </div>
-          )}
 
-          <Button onClick={handleConfirmClick} className="w-full" disabled={updateOb.isPending}>
-            {updateOb.isPending ? "Enregistrement..." : "Enregistrer les modifications"}
-          </Button>
-        </div>
-      </SheetContent>
+            <div>
+              <Label>Montant total (FCFA)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={amount}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  if (errors.amount) setErrors(prev => ({ ...prev, amount: "" }));
+                }}
+                className={cn(errors.amount && "border-destructive focus-visible:ring-destructive")}
+              />
+              {errors.amount && (
+                <p className="text-xs text-destructive mt-1">{errors.amount}</p>
+              )}
+            </div>
+
+            <div>
+              <Label>Description (optionnel)</Label>
+              <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+
+            <div>
+              <Label>Date d'échéance (optionnel)</Label>
+              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            </div>
+
+            {isCreance && (
+              <div>
+                <Label>Niveau de certitude</Label>
+                <div className="flex gap-2 mt-1.5">
+                  {([
+                    { value: "certain", label: "Certain", color: "bg-emerald-600" },
+                    { value: "probable", label: "Probable", color: "bg-amber-500" },
+                    { value: "uncertain", label: "Incertain", color: "bg-destructive" },
+                  ] as const).map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setConfidence(opt.value)}
+                      className={cn(
+                        "flex-1 rounded-lg py-2 text-xs font-medium transition-all border",
+                        confidence === opt.value
+                          ? `${opt.color} text-white border-transparent`
+                          : "border-border text-muted-foreground"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Button onClick={handleConfirmClick} className="w-full" disabled={updateOb.isPending}>
+              {updateOb.isPending ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
         <AlertDialogContent>
@@ -177,7 +179,7 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Sheet>
+    </>
   );
 };
 
