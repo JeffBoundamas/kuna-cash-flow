@@ -1,0 +1,130 @@
+import { useState, useEffect } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useUpdateObligation } from "@/hooks/use-obligations";
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import type { Obligation, ObligationConfidence } from "@/lib/obligation-types";
+
+interface Props {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  obligation: Obligation;
+}
+
+const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
+  const [personName, setPersonName] = useState(ob.person_name);
+  const [amount, setAmount] = useState(String(ob.total_amount));
+  const [description, setDescription] = useState(ob.description || "");
+  const [dueDate, setDueDate] = useState(ob.due_date || "");
+  const [confidence, setConfidence] = useState<ObligationConfidence>(ob.confidence);
+  const updateOb = useUpdateObligation();
+
+  useEffect(() => {
+    if (open) {
+      setPersonName(ob.person_name);
+      setAmount(String(ob.total_amount));
+      setDescription(ob.description || "");
+      setDueDate(ob.due_date || "");
+      setConfidence(ob.confidence);
+    }
+  }, [open, ob]);
+
+  const handleSave = async () => {
+    const numAmount = parseInt(amount);
+    if (!personName.trim() || !numAmount || numAmount <= 0) {
+      toast({ title: "Remplissez le nom et le montant", variant: "destructive" });
+      return;
+    }
+    try {
+      await updateOb.mutateAsync({
+        id: ob.id,
+        person_name: personName.trim(),
+        total_amount: numAmount,
+        description: description.trim() || undefined,
+        due_date: dueDate || undefined,
+        confidence: ob.type === "creance" ? confidence : "certain",
+        remaining_amount: ob.remaining_amount,
+        original_total: ob.total_amount,
+      });
+      toast({ title: "Modification enregistrée" });
+      onOpenChange(false);
+    } catch {
+      toast({ title: "Erreur", variant: "destructive" });
+    }
+  };
+
+  const isCreance = ob.type === "creance";
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="font-display">
+            {isCreance ? "Modifier la créance" : "Modifier l'engagement"}
+          </SheetTitle>
+        </SheetHeader>
+        <div className="space-y-4 mt-4">
+          <div>
+            <Label>Nom de la personne</Label>
+            <Input value={personName} onChange={(e) => setPersonName(e.target.value)} />
+          </div>
+
+          <div>
+            <Label>Montant total (FCFA)</Label>
+            <Input
+              type="number"
+              inputMode="numeric"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label>Description (optionnel)</Label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+          </div>
+
+          <div>
+            <Label>Date d'échéance (optionnel)</Label>
+            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+
+          {isCreance && (
+            <div>
+              <Label>Niveau de certitude</Label>
+              <div className="flex gap-2 mt-1.5">
+                {([
+                  { value: "certain", label: "Certain", color: "bg-emerald-600" },
+                  { value: "probable", label: "Probable", color: "bg-amber-500" },
+                  { value: "uncertain", label: "Incertain", color: "bg-destructive" },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setConfidence(opt.value)}
+                    className={cn(
+                      "flex-1 rounded-lg py-2 text-xs font-medium transition-all border",
+                      confidence === opt.value
+                        ? `${opt.color} text-white border-transparent`
+                        : "border-border text-muted-foreground"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Button onClick={handleSave} className="w-full" disabled={updateOb.isPending}>
+            {updateOb.isPending ? "Enregistrement..." : "Enregistrer les modifications"}
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+export default EditObligationSheet;

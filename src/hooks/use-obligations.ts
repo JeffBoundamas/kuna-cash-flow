@@ -167,6 +167,40 @@ export const useLogObligationPayment = () => {
   });
 };
 
+export const useUpdateObligation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      id: string;
+      person_name: string;
+      description?: string;
+      total_amount: number;
+      due_date?: string;
+      confidence?: ObligationConfidence;
+      remaining_amount: number;
+      original_total: number;
+    }) => {
+      const diff = params.total_amount - params.original_total;
+      const newRemaining = Math.max(0, params.remaining_amount + diff);
+      const { error } = await supabase
+        .from("obligations")
+        .update({
+          person_name: params.person_name,
+          description: params.description || null,
+          total_amount: params.total_amount,
+          remaining_amount: newRemaining,
+          due_date: params.due_date || null,
+          confidence: params.confidence || "certain",
+        })
+        .eq("id", params.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["obligations"] });
+    },
+  });
+};
+
 export const useCancelObligation = () => {
   const qc = useQueryClient();
   return useMutation({

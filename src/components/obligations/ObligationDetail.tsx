@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Ban, Plus } from "lucide-react";
+import { ArrowLeft, Ban, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { formatXAF } from "@/lib/currency";
@@ -8,6 +8,7 @@ import { useObligationPayments, useCancelObligation } from "@/hooks/use-obligati
 import { useAccounts } from "@/hooks/use-accounts";
 import { toast } from "@/hooks/use-toast";
 import LogObligationPaymentSheet from "./LogObligationPaymentSheet";
+import EditObligationSheet from "./EditObligationSheet";
 import type { Obligation } from "@/lib/obligation-types";
 
 interface Props {
@@ -30,6 +31,7 @@ const statusLabels: Record<string, string> = {
 
 const ObligationDetail = ({ obligation: ob, onBack }: Props) => {
   const [showPayment, setShowPayment] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const { data: payments = [] } = useObligationPayments(ob.id);
   const { data: accounts = [] } = useAccounts();
@@ -122,6 +124,9 @@ const ObligationDetail = ({ obligation: ob, onBack }: Props) => {
             <Plus className="h-4 w-4" />
             Enregistrer un paiement
           </Button>
+          <Button variant="outline" onClick={() => setShowEdit(true)} size="icon" className="shrink-0">
+            <Pencil className="h-4 w-4" />
+          </Button>
           <Button variant="outline" onClick={handleCancel} size="icon" className="shrink-0">
             <Ban className="h-4 w-4" />
           </Button>
@@ -175,6 +180,12 @@ const ObligationDetail = ({ obligation: ob, onBack }: Props) => {
             onBack();
           }, 3000);
         }}
+      />
+
+      <EditObligationSheet
+        open={showEdit}
+        onOpenChange={setShowEdit}
+        obligation={ob}
       />
     </div>
   );
