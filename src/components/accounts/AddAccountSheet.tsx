@@ -1,23 +1,21 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAddAccount } from "@/hooks/use-accounts";
+import { usePaymentMethods } from "@/hooks/use-payment-methods";
 import { formatXAF, parseAmount } from "@/lib/currency";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import type { AccountType } from "@/lib/types";
 
-const ACCOUNT_TYPES = [
-  { value: "Bank" as const, label: "Banque", icon: "🏦" },
-  { value: "Mobile Money" as const, label: "Mobile Money", icon: "📱" },
-  { value: "Cash" as const, label: "Cash", icon: "💵" },
-  { value: "Tontine" as const, label: "Tontine", icon: "🤝" },
-];
-
-const ACCOUNT_SUBTYPES = [
-  "Visa", "Mastercard", "Carte carburant", "Épargne", "Courant", "Autre"
-];
+const CATEGORY_LABELS: Record<AccountType, string> = {
+  Bank: "Banque",
+  "Mobile Money": "Mobile Money",
+  Cash: "Cash",
+  Tontine: "Tontine",
+};
 
 interface Props {
   open: boolean;
@@ -26,13 +24,29 @@ interface Props {
 
 const AddAccountSheet = ({ open, onOpenChange }: Props) => {
   const addAccount = useAddAccount();
+  const { data: paymentMethods = [] } = usePaymentMethods();
+  const [selectedMethodId, setSelectedMethodId] = useState("");
   const [name, setName] = useState("");
-  const [type, setType] = useState<"Bank" | "Mobile Money" | "Cash" | "Tontine">("Bank");
   const [balanceStr, setBalanceStr] = useState("");
+
+  const grouped = useMemo(() => {
+    const groups: Record<AccountType, typeof paymentMethods> = {
+      Bank: [],
+      "Mobile Money": [],
+      Cash: [],
+      Tontine: [],
+    };
+    paymentMethods.forEach((m) => {
+      if (groups[m.category]) groups[m.category].push(m);
+    });
+    return Object.entries(groups).filter(([, methods]) => methods.length > 0) as [AccountType, typeof paymentMethods][];
+  }, [paymentMethods]);
+
+  const selectedMethod = paymentMethods.find((m) => m.id === selectedMethodId);
 
   const reset = () => {
     setName("");
-    setType("Bank");
+    setSelectedMethodId("");
     setBalanceStr("");
   };
 
@@ -41,9 +55,17 @@ const AddAccountSheet = ({ open, onOpenChange }: Props) => {
       toast.error("Veuillez saisir un nom de compte");
       return;
     }
-    const icon = ACCOUNT_TYPES.find((t) => t.value === type)?.icon ?? "wallet";
+    if (!selectedMethod) {
+      toast.error("Veuillez choisir un moyen de paiement");
+      return;
+    }
     addAccount.mutate(
-      { name: name.trim(), type, balance: parseAmount(balanceStr), icon },
+      {
+        name: name.trim(),
+        type: selectedMethod.category,
+        balance: parseAmount(balanceStr),
+        icon: selectedMethod.icon,
+      },
       {
         onSuccess: () => {
           toast.success("Compte ajouté !");
@@ -57,7 +79,7 @@ const AddAccountSheet = ({ open, onOpenChange }: Props) => {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl">
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Nouveau compte</SheetTitle>
         </SheetHeader>
@@ -65,42 +87,44 @@ const AddAccountSheet = ({ open, onOpenChange }: Props) => {
           <div className="space-y-2">
             <Label>Nom du compte</Label>
             <Input
-              placeholder="Ex: Orange Money, BICEC..."
+              placeholder="Ex: Mon compte BICEC, Orange Money..."
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Type de compte</Label>
-            <Select value={type} onValueChange={(v) => setType(v as typeof type)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ACCOUNT_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.icon} {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Sous-type (optionnel)</Label>
-            <div className="flex gap-1.5 flex-wrap">
-              {ACCOUNT_SUBTYPES.map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setName((prev) => prev ? prev : st)}
-                  className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-all"
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
+          {/* Payment method picker grouped by category */}
+          <div className="space-y-3">
+            <Label>Moyen de paiement</Label>
+            {grouped.map(([category, methods]) => (
+              <div key={category}>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  {CATEGORY_LABELS[category]}
+                </p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {methods.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setSelectedMethodId(m.id)}
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5",
+                        selectedMethodId === m.id
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:border-foreground/30"
+                      )}
+                    >
+                      <span>{m.icon}</span> {m.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {paymentMethods.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Aucun moyen de paiement configuré. Allez dans Paramètres → Moyens de paiement.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
