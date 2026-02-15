@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Calendar, Plus, Settings } from "lucide-react";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import { formatXAF } from "@/lib/currency";
 import { calculateResteAVivre } from "@/lib/currency";
 import { useAccounts } from "@/hooks/use-accounts";
@@ -23,6 +24,7 @@ const currentMonth = now.getMonth() + 1;
 const currentYear = now.getFullYear();
 
 const Dashboard = () => {
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("kuna_onboarding_done"));
   const { data: accounts = [], isLoading: loadingAccounts } = useAccounts();
   const { data: transactions = [], isLoading: loadingTx } = useTransactions(currentMonth, currentYear);
   const { data: categories = [] } = useCategories();
@@ -41,6 +43,10 @@ const Dashboard = () => {
   );
 
   const isLoading = loadingAccounts || loadingTx;
+
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={() => setShowOnboarding(false)} />;
+  }
 
   if (isLoading) {
     return (
