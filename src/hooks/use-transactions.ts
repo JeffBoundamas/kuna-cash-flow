@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { enqueueTransaction } from "@/hooks/use-offline-queue";
 import type { Transaction } from "@/lib/types";
 
 export const useTransactions = (month?: number, year?: number) => {
@@ -78,6 +79,20 @@ export const useAddTransaction = () => {
       date?: string;
       sms_reference?: string;
     }) => {
+      // If offline, queue and return
+      if (!navigator.onLine) {
+        enqueueTransaction({
+          user_id: user!.id,
+          account_id: tx.account_id,
+          category_id: tx.category_id,
+          amount: tx.amount,
+          label: tx.label || "Transaction",
+          date: tx.date || new Date().toISOString().slice(0, 10),
+          sms_reference: tx.sms_reference,
+        });
+        return;
+      }
+
       const { error } = await supabase.from("transactions").insert([{
         user_id: user!.id,
         ...tx,

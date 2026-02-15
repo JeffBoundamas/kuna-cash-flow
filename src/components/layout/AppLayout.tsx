@@ -2,7 +2,9 @@ import { ReactNode, useState } from "react";
 import { Plus } from "lucide-react";
 import BottomNav from "./BottomNav";
 import QuickAddModal from "@/components/transactions/QuickAddModal";
+import InstallPrompt from "@/components/pwa/InstallPrompt";
 import { useAppBootstrap } from "@/hooks/use-app-bootstrap";
+import { useOfflineQueue } from "@/hooks/use-offline-queue";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -11,6 +13,7 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   useAppBootstrap();
+  useOfflineQueue();
 
   return (
     <div className="min-h-screen bg-background">
@@ -26,6 +29,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       </button>
 
       <QuickAddModal open={showQuickAdd} onOpenChange={setShowQuickAdd} />
+      <InstallPrompt />
       <BottomNav />
     </div>
   );
