@@ -49,7 +49,7 @@ const TontineListCard = ({ tontine, onTap }: { tontine: Tontine; onTap: () => vo
       </div>
 
       {/* Mini dot timeline */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
         <span className="text-[10px] text-muted-foreground mr-1">Tour {tontine.current_cycle}/{tontine.total_members}</span>
         <div className="flex items-center gap-1 flex-1">
           {Array.from({ length: tontine.total_members }, (_, i) => {
