@@ -3,11 +3,11 @@ import { Progress } from "@/components/ui/progress";
 
 interface SavingsRateProps {
   monthlyIncome: number;
-  monthlyExpenses: number;
+  monthlySavings: number;
 }
 
-const SavingsRate = ({ monthlyIncome, monthlyExpenses }: SavingsRateProps) => {
-  const rate = monthlyIncome > 0 ? Math.round(((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100) : 0;
+const SavingsRate = ({ monthlyIncome, monthlySavings }: SavingsRateProps) => {
+  const rate = monthlyIncome > 0 ? Math.round((monthlySavings / monthlyIncome) * 100) : 0;
   const clampedRate = Math.max(0, Math.min(100, rate));
 
   const getColor = () => {
@@ -28,6 +28,9 @@ const SavingsRate = ({ monthlyIncome, monthlyExpenses }: SavingsRateProps) => {
       <Progress value={clampedRate} className="h-2" />
       <p className="text-[11px] text-muted-foreground mt-1.5">
         {rate >= 20 ? "Excellent ! Objectif 20% atteint 🎉" : rate >= 10 ? "Pas mal, visez les 20% !" : "Attention, essayez d'épargner davantage."}
+      </p>
+      <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+        Basé sur vos versements réels vers vos objectifs
       </p>
     </div>
   );
