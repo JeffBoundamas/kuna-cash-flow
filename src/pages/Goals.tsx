@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
-import { Shield, MapPin, GraduationCap, Target, Plus, Wallet, Heart, Home, Car, Plane, Trash2 } from "lucide-react";
+import { Shield, MapPin, GraduationCap, Target, Plus, Wallet, Heart, Home, Car, Plane, Trash2, Pencil } from "lucide-react";
 import { formatXAF } from "@/lib/currency";
 import { useGoals, useDeleteGoal } from "@/hooks/use-goals";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import AddGoalSheet from "@/components/goals/AddGoalSheet";
+import EditGoalSheet from "@/components/goals/EditGoalSheet";
 import AddFundsSheet from "@/components/goals/AddFundsSheet";
 import GoalCelebration from "@/components/goals/GoalCelebration";
 import type { Goal } from "@/lib/types";
@@ -27,6 +28,7 @@ const GoalsPage = () => {
   const deleteGoal = useDeleteGoal();
   const [addOpen, setAddOpen] = useState(false);
   const [fundsGoal, setFundsGoal] = useState<Goal | null>(null);
+  const [editGoal, setEditGoal] = useState<Goal | null>(null);
   const [celebrating, setCelebrating] = useState(false);
 
   const handleCelebrationDone = useCallback(() => setCelebrating(false), []);
@@ -185,6 +187,14 @@ const GoalsPage = () => {
                 <Button
                   size="sm"
                   variant="ghost"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                  onClick={() => setEditGoal(goal)}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
                   className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                   onClick={() => {
                     if (confirm("Supprimer cet objectif ?")) {
@@ -212,6 +222,11 @@ const GoalsPage = () => {
       </div>
 
       <AddGoalSheet open={addOpen} onOpenChange={setAddOpen} />
+      <EditGoalSheet
+        open={!!editGoal}
+        onOpenChange={(v) => { if (!v) setEditGoal(null); }}
+        goal={editGoal}
+      />
       <AddFundsSheet
         open={!!fundsGoal}
         onOpenChange={(v) => { if (!v) setFundsGoal(null); }}
