@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FileText,
   TrendingUp,
@@ -7,6 +8,7 @@ import {
   Filter,
   ChevronDown,
   Printer,
+  ArrowLeft,
 } from "lucide-react";
 import { formatXAF } from "@/lib/currency";
 import { useAllTransactions } from "@/hooks/use-transactions";
@@ -17,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import type { Transaction, Category, Account } from "@/lib/types";
 
 const Report = () => {
+  const navigate = useNavigate();
   const { data: transactions = [] } = useAllTransactions();
   const { data: categories = [] } = useCategories();
   const { data: accounts = [] } = useAccounts();
@@ -181,10 +184,19 @@ const Report = () => {
     <div className="px-4 pt-6 space-y-4 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold font-display flex items-center gap-2">
-          <FileText className="h-5 w-5 text-primary" />
-          Rapport
-        </h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/transactions")}
+            className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Retour"
+          >
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+          </button>
+          <h1 className="text-xl font-bold font-display flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            Rapport
+          </h1>
+        </div>
         <Button size="sm" variant="outline" className="rounded-lg text-xs gap-1.5" onClick={handlePrint}>
           <Printer className="h-3.5 w-3.5" />
           PDF
