@@ -18,6 +18,7 @@ import TontinesPage from "@/pages/Tontines";
 import TontineDetailPage from "@/pages/TontineDetail";
 import Portfolio from "@/pages/Portfolio";
 import More from "@/pages/More";
+import PaymentMethods from "@/pages/PaymentMethods";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound";
 import NotificationsPage from "@/pages/Notifications";
@@ -50,6 +51,7 @@ const App = () => (
                       <Route path="/tontines/:id" element={<TontineDetailPage />} />
                       <Route path="/portfolio" element={<Portfolio />} />
                       <Route path="/more" element={<More />} />
+                      <Route path="/payment-methods" element={<PaymentMethods />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/categories" element={<Categories />} />
                       <Route path="/notifications" element={<NotificationsPage />} />
