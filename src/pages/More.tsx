@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { Target, Settings, Download, CreditCard, ChevronRight } from "lucide-react";
+import { Target, Settings, Download, ChevronRight } from "lucide-react";
 
 const items = [
-  { to: "/payment-methods", icon: CreditCard, label: "Moyens de paiement" },
   { to: "/goals", icon: Target, label: "Objectifs d'épargne" },
   { to: "/settings", icon: Settings, label: "Paramètres" },
   { to: "/export", icon: Download, label: "Exporter mes données", placeholder: true },

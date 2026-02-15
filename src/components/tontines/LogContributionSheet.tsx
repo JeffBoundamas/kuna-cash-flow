@@ -6,8 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAccounts } from "@/hooks/use-accounts";
 import { useLogContribution } from "@/hooks/use-tontines";
 import { useCreateNotification } from "@/hooks/use-notifications";
-import InsufficientBalanceModal from "@/components/InsufficientBalanceModal";
-import { canDebitAccount } from "@/lib/balance-validation";
 import { formatXAF } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -26,21 +24,12 @@ const LogContributionSheet = ({ open, onOpenChange, tontineId, tontineName, amou
   const [accountId, setAccountId] = useState("");
   const logContribution = useLogContribution();
   const createNotification = useCreateNotification();
-  const [balanceError, setBalanceError] = useState<{ accountName: string; currentBalance: number; requestedAmount: number } | null>(null);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!accountId) {
       toast.error("Choisissez un compte");
       return;
     }
-
-    // Balance check
-    const check = await canDebitAccount(accountId, amount);
-    if (!check.allowed) {
-      setBalanceError({ accountName: check.accountName, currentBalance: check.currentBalance, requestedAmount: amount });
-      return;
-    }
-
     logContribution.mutate(
       {
         tontine_id: tontineId,
@@ -67,49 +56,38 @@ const LogContributionSheet = ({ open, onOpenChange, tontineId, tontineName, amou
   };
 
   return (
-    <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-2xl">
-          <SheetHeader>
-            <SheetTitle>Enregistrer ma cotisation</SheetTitle>
-          </SheetHeader>
-          <div className="space-y-4 mt-4">
-            <div className="rounded-xl bg-muted p-4 text-center">
-              <p className="text-xs text-muted-foreground">Montant de la cotisation</p>
-              <p className="text-xl font-bold font-display">{formatXAF(amount)}</p>
-              <p className="text-xs text-muted-foreground mt-1">Cycle {currentCycle} • {tontineName}</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Depuis quel compte ?</Label>
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger><SelectValue placeholder="Choisir un compte" /></SelectTrigger>
-                <SelectContent>
-                  {accounts.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name} ({formatXAF(a.balance)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button className="w-full" onClick={handleSubmit} disabled={logContribution.isPending}>
-              Enregistrer la cotisation
-            </Button>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="rounded-t-2xl">
+        <SheetHeader>
+          <SheetTitle>Enregistrer ma cotisation</SheetTitle>
+        </SheetHeader>
+        <div className="space-y-4 mt-4">
+          <div className="rounded-xl bg-muted p-4 text-center">
+            <p className="text-xs text-muted-foreground">Montant de la cotisation</p>
+            <p className="text-xl font-bold font-display">{formatXAF(amount)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Cycle {currentCycle} • {tontineName}</p>
           </div>
-        </SheetContent>
-      </Sheet>
 
-      <InsufficientBalanceModal
-        open={!!balanceError}
-        onOpenChange={() => setBalanceError(null)}
-        accountName={balanceError?.accountName ?? ""}
-        currentBalance={balanceError?.currentBalance ?? 0}
-        requestedAmount={balanceError?.requestedAmount ?? 0}
-        onChooseAnother={() => setBalanceError(null)}
-      />
-    </>
+          <div className="space-y-2">
+            <Label>Depuis quel compte ?</Label>
+            <Select value={accountId} onValueChange={setAccountId}>
+              <SelectTrigger><SelectValue placeholder="Choisir un compte" /></SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name} ({formatXAF(a.balance)})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button className="w-full" onClick={handleSubmit} disabled={logContribution.isPending}>
+            Enregistrer la cotisation
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
