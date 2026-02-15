@@ -2,19 +2,27 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Mail, Phone, ChevronRight, ArrowDownCircle, ArrowUpCircle, Repeat } from "lucide-react";
+import { LogOut, User, Mail, Phone, ChevronRight, ArrowDownCircle, ArrowUpCircle, Repeat, Download, Upload, FileText, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRecurringTransactions } from "@/hooks/use-recurring-transactions";
 import { useCategories } from "@/hooks/use-categories";
 import { useAccounts } from "@/hooks/use-accounts";
 import { toast } from "@/hooks/use-toast";
 import { formatXAF } from "@/lib/currency";
+import ExportCSVSheet from "@/components/data/ExportCSVSheet";
+import ExportPDFSheet from "@/components/data/ExportPDFSheet";
+import ImportCSVSheet from "@/components/data/ImportCSVSheet";
+import ResetDataSheet from "@/components/data/ResetDataSheet";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
+  const [showExportCSV, setShowExportCSV] = useState(false);
+  const [showExportPDF, setShowExportPDF] = useState(false);
+  const [showImportCSV, setShowImportCSV] = useState(false);
+  const [showReset, setShowReset] = useState(false);
 
   const { data: recurrings = [] } = useRecurringTransactions();
   const { data: categories = [] } = useCategories();
@@ -160,6 +168,7 @@ const Settings = () => {
         </div>
       )}
 
+      {/* Categories */}
       <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
         <button
           onClick={() => navigate("/categories?type=expense")}
@@ -183,6 +192,53 @@ const Settings = () => {
         </button>
       </div>
 
+      {/* Data management */}
+      <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
+        <div className="px-5 py-3 border-b border-border">
+          <h2 className="text-sm font-bold font-display">Gestion des données</h2>
+        </div>
+        <button
+          onClick={() => setShowExportCSV(true)}
+          className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Download className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Exporter en CSV</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
+        <button
+          onClick={() => setShowExportPDF(true)}
+          className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Résumé mensuel PDF</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
+        <button
+          onClick={() => setShowImportCSV(true)}
+          className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Upload className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Importer un CSV</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
+        <button
+          onClick={() => setShowReset(true)}
+          className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Trash2 className="h-4 w-4 text-destructive" />
+            <span className="text-sm font-medium text-destructive">Réinitialiser mes données</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </div>
+
       <Button
         onClick={handleLogout}
         variant="destructive"
@@ -191,6 +247,11 @@ const Settings = () => {
         <LogOut className="h-4 w-4 mr-2" />
         Se déconnecter
       </Button>
+
+      <ExportCSVSheet open={showExportCSV} onOpenChange={setShowExportCSV} />
+      <ExportPDFSheet open={showExportPDF} onOpenChange={setShowExportPDF} />
+      <ImportCSVSheet open={showImportCSV} onOpenChange={setShowImportCSV} />
+      <ResetDataSheet open={showReset} onOpenChange={setShowReset} />
     </div>
   );
 };
