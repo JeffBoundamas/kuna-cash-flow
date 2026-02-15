@@ -44,6 +44,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
   const [categoryId, setCategoryId] = useState(defaults.categoryId);
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState<RecurringFrequency>("monthly");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
 
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
@@ -66,6 +67,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
       setLabel("");
       setIsRecurring(false);
       setFrequency("monthly");
+      setDate(new Date().toISOString().slice(0, 10));
     }
   }, [open]);
 
@@ -98,6 +100,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
         category_id: categoryId,
         amount: finalAmount,
         label: label || "Transaction",
+        date: date,
       });
 
       // Also create recurring template if toggled
@@ -162,6 +165,14 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
           placeholder="Libellé (optionnel)"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+
+        {/* Date */}
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
 
