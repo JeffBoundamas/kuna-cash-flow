@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useAddTransaction } from "@/hooks/use-transactions";
+import { useAddRecurringTransaction, type RecurringFrequency } from "@/hooks/use-recurring-transactions";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import CalculatorKeypad from "./CalculatorKeypad";
 import CategoryListPicker from "./CategoryListPicker";
+import RecurringToggle from "./RecurringToggle";
 
 const STORAGE_KEY = "quickadd_defaults";
 
@@ -40,10 +42,13 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
   const [label, setLabel] = useState("");
   const [accountId, setAccountId] = useState(defaults.accountId);
   const [categoryId, setCategoryId] = useState(defaults.categoryId);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState<RecurringFrequency>("monthly");
 
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
   const addTransaction = useAddTransaction();
+  const addRecurring = useAddRecurringTransaction();
 
   const filteredCategories = useMemo(
     () => categories.filter((c) => (type === "income" ? c.type === "Income" : c.type === "Expense")),
@@ -59,6 +64,8 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
       setCategoryId(d.categoryId);
       setAmount("");
       setLabel("");
+      setIsRecurring(false);
+      setFrequency("monthly");
     }
   }, [open]);
 
@@ -92,6 +99,17 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
         amount: finalAmount,
         label: label || "Transaction",
       });
+
+      // Also create recurring template if toggled
+      if (isRecurring) {
+        await addRecurring.mutateAsync({
+          account_id: selectedAccount,
+          category_id: categoryId,
+          amount: finalAmount,
+          label: label || "Transaction",
+          frequency,
+        });
+      }
 
       // Save defaults for next time
       saveDefaults({ categoryId, accountId: selectedAccount, type });
@@ -172,6 +190,14 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
           categories={filteredCategories}
           selectedId={categoryId}
           onSelect={setCategoryId}
+        />
+
+        {/* Recurring toggle */}
+        <RecurringToggle
+          enabled={isRecurring}
+          onToggle={setIsRecurring}
+          frequency={frequency}
+          onFrequencyChange={setFrequency}
         />
 
         <Button

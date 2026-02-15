@@ -1,15 +1,73 @@
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Mail, ChevronRight, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { LogOut, User, Mail, Phone, ChevronRight, ArrowDownCircle, ArrowUpCircle, Repeat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useRecurringTransactions } from "@/hooks/use-recurring-transactions";
+import { useCategories } from "@/hooks/use-categories";
+import { useAccounts } from "@/hooks/use-accounts";
+import { toast } from "@/hooks/use-toast";
+import { formatXAF } from "@/lib/currency";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [phone, setPhone] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
+
+  const { data: recurrings = [] } = useRecurringTransactions();
+  const { data: categories = [] } = useCategories();
+  const { data: accounts = [] } = useAccounts();
+
+  const catMap = new Map(categories.map(c => [c.id, c]));
+  const accMap = new Map(accounts.map(a => [a.id, a]));
+
+  // Load phone from profile
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("phone")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.phone) setPhone(data.phone);
+      });
+  }, [user]);
+
+  const savePhone = async () => {
+    if (!user) return;
+    setSavingPhone(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ phone })
+      .eq("user_id", user.id);
+    setSavingPhone(false);
+    if (error) {
+      toast({ title: "Erreur", variant: "destructive" });
+    } else {
+      toast({ title: "Numéro enregistré ✓" });
+    }
+  };
 
   const handleLogout = async () => {
     await signOut();
     navigate("/auth", { replace: true });
+  };
+
+  const toggleRecurring = async (id: string, isActive: boolean) => {
+    await supabase
+      .from("recurring_transactions")
+      .update({ is_active: !isActive })
+      .eq("id", id);
+    toast({ title: isActive ? "Récurrence désactivée" : "Récurrence activée" });
+  };
+
+  const freqLabel = (f: string) => {
+    if (f === "daily") return "Quotidien";
+    if (f === "weekly") return "Hebdo";
+    return "Mensuel";
   };
 
   return (
@@ -31,7 +89,76 @@ const Settings = () => {
             </div>
           </div>
         </div>
+
+        {/* Phone number */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+            <Phone className="h-3 w-3" />
+            Numéro WhatsApp (pour rappels futurs)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="tel"
+              placeholder="+237 6XX XXX XXX"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <Button
+              onClick={savePhone}
+              disabled={savingPhone}
+              size="sm"
+              variant="outline"
+              className="rounded-xl"
+            >
+              {savingPhone ? "..." : "OK"}
+            </Button>
+          </div>
+        </div>
       </div>
+
+      {/* Recurring transactions */}
+      {recurrings.length > 0 && (
+        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+          <div className="px-5 py-3 border-b border-border">
+            <h2 className="text-sm font-bold font-display flex items-center gap-2">
+              <Repeat className="h-4 w-4 text-primary" />
+              Transactions récurrentes
+            </h2>
+          </div>
+          <div className="divide-y divide-border">
+            {recurrings.map((rt) => {
+              const cat = catMap.get(rt.category_id);
+              const acc = accMap.get(rt.account_id);
+              return (
+                <div key={rt.id} className="flex items-center justify-between px-5 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{rt.label}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {cat?.name} · {acc?.name} · {freqLabel(rt.frequency)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-xs font-bold font-display">
+                      {formatXAF(rt.amount)}
+                    </span>
+                    <button
+                      onClick={() => toggleRecurring(rt.id, rt.is_active)}
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        rt.is_active
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {rt.is_active ? "Actif" : "Inactif"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
         <button
