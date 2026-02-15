@@ -15,6 +15,10 @@ const ACCOUNT_TYPES = [
   { value: "Tontine" as const, label: "Tontine", icon: "🤝" },
 ];
 
+const ACCOUNT_SUBTYPES = [
+  "Visa", "Mastercard", "Carte carburant", "Épargne", "Courant", "Autre"
+];
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -81,6 +85,22 @@ const AddAccountSheet = ({ open, onOpenChange }: Props) => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Sous-type (optionnel)</Label>
+            <div className="flex gap-1.5 flex-wrap">
+              {ACCOUNT_SUBTYPES.map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setName((prev) => prev ? prev : st)}
+                  className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-all"
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">

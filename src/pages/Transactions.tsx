@@ -114,10 +114,9 @@ const Transactions = () => {
           <span className="text-xs text-muted-foreground">{sorted.length} transactions</span>
           <button
             onClick={() => navigate("/report")}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-            aria-label="Rapports"
+            className="px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-xs font-medium text-primary"
           >
-            <BarChart3 className="h-5 w-5 text-muted-foreground" />
+            Rapports
           </button>
         </div>
       </div>
