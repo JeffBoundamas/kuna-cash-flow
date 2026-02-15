@@ -86,7 +86,7 @@ const CreancesTab = () => {
           {formatXAF(totalRemaining)}
         </p>
         {byCertainty && totalRemaining > 0 && (
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-[11px] text-muted-foreground mt-1 truncate">
             Certain : {formatXAF(byCertainty.certain)} · Probable : {formatXAF(byCertainty.probable)} · Incertain : {formatXAF(byCertainty.uncertain)}
           </p>
         )}
