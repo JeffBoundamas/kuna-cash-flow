@@ -385,27 +385,45 @@ export type Database = {
       }
       payment_methods: {
         Row: {
+          allow_negative_balance: boolean
           category: Database["public"]["Enums"]["account_type"]
+          color: string
           created_at: string
           icon: string
           id: string
+          initial_balance: number
+          is_active: boolean
           name: string
+          sort_order: number
+          updated_at: string
           user_id: string
         }
         Insert: {
+          allow_negative_balance?: boolean
           category?: Database["public"]["Enums"]["account_type"]
+          color?: string
           created_at?: string
           icon?: string
           id?: string
+          initial_balance?: number
+          is_active?: boolean
           name: string
+          sort_order?: number
+          updated_at?: string
           user_id: string
         }
         Update: {
+          allow_negative_balance?: boolean
           category?: Database["public"]["Enums"]["account_type"]
+          color?: string
           created_at?: string
           icon?: string
           id?: string
+          initial_balance?: number
+          is_active?: boolean
           name?: string
+          sort_order?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
