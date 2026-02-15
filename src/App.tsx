@@ -14,6 +14,8 @@ import GoalsPage from "@/pages/Goals";
 import Settings from "@/pages/Settings";
 import Report from "@/pages/Report";
 import Categories from "@/pages/Categories";
+import TontinesPage from "@/pages/Tontines";
+import TontineDetailPage from "@/pages/TontineDetail";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -40,6 +42,8 @@ const App = () => (
                       <Route path="/budget" element={<BudgetPage />} />
                       <Route path="/report" element={<Report />} />
                       <Route path="/goals" element={<GoalsPage />} />
+                      <Route path="/tontines" element={<TontinesPage />} />
+                      <Route path="/tontines/:id" element={<TontineDetailPage />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/categories" element={<Categories />} />
                       <Route path="*" element={<NotFound />} />

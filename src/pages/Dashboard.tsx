@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Calendar, Plus, Settings } from "lucide-react";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
+import TontineDashboardCard from "@/components/tontines/TontineDashboardCard";
 import { formatXAF } from "@/lib/currency";
 import { calculateResteAVivre } from "@/lib/currency";
 import { useAccounts } from "@/hooks/use-accounts";
@@ -94,6 +95,9 @@ const Dashboard = () => {
           <p>{now.toLocaleDateString("fr-FR", { month: "short" })} {currentYear}</p>
         </div>
       </div>
+
+      {/* Tontines Summary */}
+      <TontineDashboardCard />
 
       {/* Savings Rate */}
       <SavingsRate monthlyIncome={monthlyIncome} monthlySavings={monthlySavings} />

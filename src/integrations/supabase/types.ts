@@ -289,6 +289,143 @@ export type Database = {
           },
         ]
       }
+      tontine_members: {
+        Row: {
+          created_at: string
+          has_received_pot: boolean
+          id: string
+          is_current_user: boolean
+          member_name: string
+          payout_date: string | null
+          position_in_order: number
+          tontine_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          has_received_pot?: boolean
+          id?: string
+          is_current_user?: boolean
+          member_name: string
+          payout_date?: string | null
+          position_in_order?: number
+          tontine_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          has_received_pot?: boolean
+          id?: string
+          is_current_user?: boolean
+          member_name?: string
+          payout_date?: string | null
+          position_in_order?: number
+          tontine_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tontine_members_tontine_id_fkey"
+            columns: ["tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tontine_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          cycle_number: number
+          id: string
+          linked_account_id: string | null
+          payment_date: string
+          tontine_id: string
+          type: Database["public"]["Enums"]["tontine_payment_type"]
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          cycle_number?: number
+          id?: string
+          linked_account_id?: string | null
+          payment_date?: string
+          tontine_id: string
+          type?: Database["public"]["Enums"]["tontine_payment_type"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          cycle_number?: number
+          id?: string
+          linked_account_id?: string | null
+          payment_date?: string
+          tontine_id?: string
+          type?: Database["public"]["Enums"]["tontine_payment_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tontine_payments_linked_account_id_fkey"
+            columns: ["linked_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tontine_payments_tontine_id_fkey"
+            columns: ["tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tontines: {
+        Row: {
+          contribution_amount: number
+          created_at: string
+          current_cycle: number
+          frequency: Database["public"]["Enums"]["tontine_frequency"]
+          id: string
+          name: string
+          start_date: string
+          status: Database["public"]["Enums"]["tontine_status"]
+          total_members: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contribution_amount?: number
+          created_at?: string
+          current_cycle?: number
+          frequency?: Database["public"]["Enums"]["tontine_frequency"]
+          id?: string
+          name: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["tontine_status"]
+          total_members?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contribution_amount?: number
+          created_at?: string
+          current_cycle?: number
+          frequency?: Database["public"]["Enums"]["tontine_frequency"]
+          id?: string
+          name?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["tontine_status"]
+          total_members?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           account_id: string
@@ -357,6 +494,9 @@ export type Database = {
       account_type: "Bank" | "Mobile Money" | "Cash" | "Tontine"
       category_nature: "Essential" | "Desire" | "Savings"
       category_type: "Income" | "Expense"
+      tontine_frequency: "weekly" | "monthly"
+      tontine_payment_type: "contribution" | "pot_received"
+      tontine_status: "active" | "completed"
       transaction_status: "Planned" | "Realized"
     }
     CompositeTypes: {
@@ -488,6 +628,9 @@ export const Constants = {
       account_type: ["Bank", "Mobile Money", "Cash", "Tontine"],
       category_nature: ["Essential", "Desire", "Savings"],
       category_type: ["Income", "Expense"],
+      tontine_frequency: ["weekly", "monthly"],
+      tontine_payment_type: ["contribution", "pot_received"],
+      tontine_status: ["active", "completed"],
       transaction_status: ["Planned", "Realized"],
     },
   },
