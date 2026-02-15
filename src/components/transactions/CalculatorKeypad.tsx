@@ -86,11 +86,11 @@ const CalculatorKeypad = ({ value, onChange }: CalculatorKeypadProps) => {
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full overflow-hidden">
       {/* Display */}
-      <div className="flex items-center justify-between rounded-xl bg-muted px-4 py-3">
+      <div className="flex items-center justify-between rounded-xl bg-muted px-4 py-3 min-w-0">
         <span className="text-xs text-muted-foreground">XAF</span>
-        <span className="text-3xl font-bold font-display text-foreground tabular-nums">
+        <span className="text-2xl font-bold font-display text-foreground tabular-nums truncate">
           {value
             ? parseInt(value).toLocaleString("fr-FR").replace(/,/g, " ")
             : "0"}
@@ -98,7 +98,7 @@ const CalculatorKeypad = ({ value, onChange }: CalculatorKeypadProps) => {
       </div>
 
       {/* Keypad grid */}
-      <div className="grid grid-cols-3 gap-1.5 min-w-0 w-full">
+      <div className="grid grid-cols-3 gap-1 w-full min-w-0">
         {keys.flat().map((key) => {
           if (key === "del") {
             return (
@@ -106,7 +106,7 @@ const CalculatorKeypad = ({ value, onChange }: CalculatorKeypadProps) => {
                 key={key}
                 onClick={backspace}
                 onDoubleClick={clear}
-                className="flex h-12 items-center justify-center rounded-xl bg-muted text-muted-foreground active:bg-border transition-colors min-w-0"
+                className="flex h-11 items-center justify-center rounded-lg bg-muted text-muted-foreground active:bg-border transition-colors min-w-0 overflow-hidden"
                 aria-label="Supprimer"
               >
                 <Delete className="h-5 w-5" />
@@ -117,7 +117,7 @@ const CalculatorKeypad = ({ value, onChange }: CalculatorKeypadProps) => {
             <button
               key={key}
               onClick={() => append(key)}
-              className="flex h-12 items-center justify-center rounded-xl bg-card border border-border text-lg font-semibold font-display text-foreground active:bg-muted transition-colors min-w-0"
+              className="flex h-11 items-center justify-center rounded-lg bg-card border border-border text-base font-semibold font-display text-foreground active:bg-muted transition-colors min-w-0 overflow-hidden"
             >
               {key}
             </button>
