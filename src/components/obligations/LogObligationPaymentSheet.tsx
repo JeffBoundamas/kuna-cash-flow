@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLogObligationPayment } from "@/hooks/use-obligations";
 import { useAccounts } from "@/hooks/use-accounts";
+import InsufficientBalanceModal from "@/components/InsufficientBalanceModal";
+import { canDebitAccount } from "@/lib/balance-validation";
 import { toast } from "@/hooks/use-toast";
 import { formatXAF } from "@/lib/currency";
 import type { Obligation } from "@/lib/obligation-types";
@@ -21,6 +23,7 @@ const LogObligationPaymentSheet = ({ open, onOpenChange, obligation, onSettled }
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [accountId, setAccountId] = useState("");
   const [notes, setNotes] = useState("");
+  const [balanceError, setBalanceError] = useState<{ accountName: string; currentBalance: number; requestedAmount: number } | null>(null);
   const { data: accounts = [] } = useAccounts();
   const logPayment = useLogObligationPayment();
 
@@ -41,6 +44,16 @@ const LogObligationPaymentSheet = ({ open, onOpenChange, obligation, onSettled }
       toast({ title: "Montant invalide", variant: "destructive" });
       return;
     }
+
+    // Balance check (only for engagements = outgoing payments)
+    if (obligation.type === "engagement") {
+      const check = await canDebitAccount(accountId, numAmount);
+      if (!check.allowed) {
+        setBalanceError({ accountName: check.accountName, currentBalance: check.currentBalance, requestedAmount: numAmount });
+        return;
+      }
+    }
+
     try {
       const result = await logPayment.mutateAsync({
         obligation,
@@ -62,56 +75,67 @@ const LogObligationPaymentSheet = ({ open, onOpenChange, obligation, onSettled }
   if (!obligation) return null;
 
   return (
-    <Sheet open={open} onOpenChange={handleOpen}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="font-display">Enregistrer un paiement</SheetTitle>
-        </SheetHeader>
-        <div className="space-y-4 mt-4">
-          <p className="text-sm text-muted-foreground">
-            Restant dû : <strong>{formatXAF(obligation.remaining_amount)}</strong>
-          </p>
+    <>
+      <Sheet open={open} onOpenChange={handleOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display">Enregistrer un paiement</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-4 mt-4">
+            <p className="text-sm text-muted-foreground">
+              Restant dû : <strong>{formatXAF(obligation.remaining_amount)}</strong>
+            </p>
 
-          <div>
-            <Label>Montant (FCFA)</Label>
-            <Input
-              type="number"
-              inputMode="numeric"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
+            <div>
+              <Label>Montant (FCFA)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label>Date du paiement</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+
+            <div>
+              <Label>Compte utilisé</Label>
+              <select
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm"
+              >
+                <option value="">Sélectionner...</option>
+                {accounts.map(a => (
+                  <option key={a.id} value={a.id}>{a.name} ({formatXAF(a.balance)})</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label>Notes (optionnel)</Label>
+              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Détails..." />
+            </div>
+
+            <Button onClick={handleSave} className="w-full" disabled={logPayment.isPending}>
+              {logPayment.isPending ? "Enregistrement..." : "Confirmer le paiement"}
+            </Button>
           </div>
+        </SheetContent>
+      </Sheet>
 
-          <div>
-            <Label>Date du paiement</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
-
-          <div>
-            <Label>Compte utilisé</Label>
-            <select
-              value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm"
-            >
-              <option value="">Sélectionner...</option>
-              {accounts.map(a => (
-                <option key={a.id} value={a.id}>{a.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <Label>Notes (optionnel)</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Détails..." />
-          </div>
-
-          <Button onClick={handleSave} className="w-full" disabled={logPayment.isPending}>
-            {logPayment.isPending ? "Enregistrement..." : "Confirmer le paiement"}
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+      <InsufficientBalanceModal
+        open={!!balanceError}
+        onOpenChange={() => setBalanceError(null)}
+        accountName={balanceError?.accountName ?? ""}
+        currentBalance={balanceError?.currentBalance ?? 0}
+        requestedAmount={balanceError?.requestedAmount ?? 0}
+        onChooseAnother={() => setBalanceError(null)}
+      />
+    </>
   );
 };
 

@@ -10,6 +10,9 @@ import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useAddTransaction } from "@/hooks/use-transactions";
 import { useAddRecurringTransaction, type RecurringFrequency } from "@/hooks/use-recurring-transactions";
+import InsufficientBalanceModal from "@/components/InsufficientBalanceModal";
+import { canDebitAccount } from "@/lib/balance-validation";
+import { formatXAF } from "@/lib/currency";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import CalculatorKeypad from "./CalculatorKeypad";
@@ -45,6 +48,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState<RecurringFrequency>("monthly");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [balanceError, setBalanceError] = useState<{ accountName: string; currentBalance: number; requestedAmount: number } | null>(null);
 
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
@@ -56,7 +60,8 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
     [categories, type]
   );
 
-  // Reset defaults when opening
+  const numAmount = parseInt(amount) || 0;
+
   useEffect(() => {
     if (open) {
       const d = getDefaults();
@@ -71,7 +76,6 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
     }
   }, [open]);
 
-  // Validate that stored defaults still exist
   useEffect(() => {
     if (accountId && accounts.length > 0 && !accounts.find((a) => a.id === accountId)) {
       setAccountId(accounts[0]?.id || "");
@@ -91,8 +95,16 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
       return;
     }
 
-    const numAmount = parseInt(amount);
     const finalAmount = type === "expense" ? -Math.abs(numAmount) : Math.abs(numAmount);
+
+    // Balance check for expenses
+    if (type === "expense" && numAmount > 0) {
+      const check = await canDebitAccount(selectedAccount, numAmount);
+      if (!check.allowed) {
+        setBalanceError({ accountName: check.accountName, currentBalance: check.currentBalance, requestedAmount: numAmount });
+        return;
+      }
+    }
 
     try {
       await addTransaction.mutateAsync({
@@ -103,7 +115,6 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
         date: date,
       });
 
-      // Also create recurring template if toggled
       if (isRecurring) {
         await addRecurring.mutateAsync({
           account_id: selectedAccount,
@@ -114,7 +125,6 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
         });
       }
 
-      // Save defaults for next time
       saveDefaults({ categoryId, accountId: selectedAccount, type });
 
       toast({
@@ -128,99 +138,120 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] max-h-[90vh] overflow-y-auto p-4 gap-3">
-        <DialogHeader className="pb-0">
-          <DialogTitle className="font-display text-base">Ajout rapide</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[400px] max-h-[90vh] overflow-y-auto p-4 gap-3">
+          <DialogHeader className="pb-0">
+            <DialogTitle className="font-display text-base">Ajout rapide</DialogTitle>
+          </DialogHeader>
 
-        {/* Type toggle */}
-        <div className="flex rounded-xl bg-muted p-1 gap-1">
-          <button
-            onClick={() => { setType("expense"); setCategoryId(""); }}
-            className={cn(
-              "flex-1 rounded-lg py-1.5 text-sm font-medium transition-all",
-              type === "expense" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-            )}
-          >
-            Dépense
-          </button>
-          <button
-            onClick={() => { setType("income"); setCategoryId(""); }}
-            className={cn(
-              "flex-1 rounded-lg py-1.5 text-sm font-medium transition-all",
-              type === "income" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-            )}
-          >
-            Revenu
-          </button>
-        </div>
-
-        {/* Calculator */}
-        <CalculatorKeypad value={amount} onChange={setAmount} />
-
-        {/* Label (optional, collapsible) */}
-        <input
-          type="text"
-          placeholder="Libellé (optionnel)"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-
-        {/* Date */}
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-
-        {/* Account chips */}
-        {accounts.length > 0 && (
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-            {accounts.map((acc) => (
-              <button
-                key={acc.id}
-                onClick={() => setAccountId(acc.id)}
-                className={cn(
-                  "rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0",
-                  (accountId || accounts[0]?.id) === acc.id
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground"
-                )}
-              >
-                {acc.name}
-              </button>
-            ))}
+          {/* Type toggle */}
+          <div className="flex rounded-xl bg-muted p-1 gap-1">
+            <button
+              onClick={() => { setType("expense"); setCategoryId(""); }}
+              className={cn(
+                "flex-1 rounded-lg py-1.5 text-sm font-medium transition-all",
+                type === "expense" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+              )}
+            >
+              Dépense
+            </button>
+            <button
+              onClick={() => { setType("income"); setCategoryId(""); }}
+              className={cn(
+                "flex-1 rounded-lg py-1.5 text-sm font-medium transition-all",
+                type === "income" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+              )}
+            >
+              Revenu
+            </button>
           </div>
-        )}
 
-        {/* Category picker */}
-        <CategoryListPicker
-          categories={filteredCategories}
-          selectedId={categoryId}
-          onSelect={setCategoryId}
-        />
+          {/* Calculator */}
+          <CalculatorKeypad value={amount} onChange={setAmount} />
 
-        {/* Recurring toggle */}
-        <RecurringToggle
-          enabled={isRecurring}
-          onToggle={setIsRecurring}
-          frequency={frequency}
-          onFrequencyChange={setFrequency}
-        />
+          {/* Label */}
+          <input
+            type="text"
+            placeholder="Libellé (optionnel)"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
 
-        <Button
-          onClick={handleSubmit}
-          disabled={addTransaction.isPending || !amount}
-          className="w-full rounded-xl py-5 text-base font-semibold"
-          size="lg"
-        >
-          {addTransaction.isPending ? "Enregistrement..." : "Enregistrer"}
-        </Button>
-      </DialogContent>
-    </Dialog>
+          {/* Date */}
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+
+          {/* Account chips with balance */}
+          {accounts.length > 0 && (
+            <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+              {accounts.map((acc) => {
+                const insufficientForExpense = type === "expense" && numAmount > 0 && acc.balance < numAmount;
+                return (
+                  <button
+                    key={acc.id}
+                    onClick={() => !insufficientForExpense && setAccountId(acc.id)}
+                    disabled={insufficientForExpense}
+                    className={cn(
+                      "rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0",
+                      insufficientForExpense
+                        ? "border-border bg-muted text-muted-foreground opacity-60 cursor-not-allowed"
+                        : (accountId || accounts[0]?.id) === acc.id
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground"
+                    )}
+                  >
+                    {acc.name}
+                    <span className="block text-[10px] opacity-70">{formatXAF(acc.balance)}</span>
+                    {insufficientForExpense && (
+                      <span className="block text-[10px] text-destructive font-medium">Solde insuffisant</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Category picker */}
+          <CategoryListPicker
+            categories={filteredCategories}
+            selectedId={categoryId}
+            onSelect={setCategoryId}
+          />
+
+          {/* Recurring toggle */}
+          <RecurringToggle
+            enabled={isRecurring}
+            onToggle={setIsRecurring}
+            frequency={frequency}
+            onFrequencyChange={setFrequency}
+          />
+
+          <Button
+            onClick={handleSubmit}
+            disabled={addTransaction.isPending || !amount}
+            className="w-full rounded-xl py-5 text-base font-semibold"
+            size="lg"
+          >
+            {addTransaction.isPending ? "Enregistrement..." : "Enregistrer"}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <InsufficientBalanceModal
+        open={!!balanceError}
+        onOpenChange={() => setBalanceError(null)}
+        accountName={balanceError?.accountName ?? ""}
+        currentBalance={balanceError?.currentBalance ?? 0}
+        requestedAmount={balanceError?.requestedAmount ?? 0}
+        onChooseAnother={() => setBalanceError(null)}
+      />
+    </>
   );
 };
 
