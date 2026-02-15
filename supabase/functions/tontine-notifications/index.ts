@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       type: string;
       title: string;
       body: string;
-      related_tontine_id: string;
+      related_tontine_id: string | null;
     }> = [];
 
     for (const tontine of tontines ?? []) {
@@ -154,6 +154,81 @@ Deno.serve(async (req) => {
               related_tontine_id: tontine.id,
             });
           }
+        }
+      }
+    }
+
+    // ── OBLIGATION NOTIFICATIONS ──
+    const { data: obligations, error: obErr } = await supabase
+      .from("obligations")
+      .select("*")
+      .in("status", ["active", "partially_paid"]);
+
+    if (obErr) throw obErr;
+
+    for (const ob of obligations ?? []) {
+      if (!ob.due_date) continue;
+
+      const dueDate = new Date(ob.due_date);
+      const dueDateStr = dueDate.toISOString().split("T")[0];
+
+      // Reminder 3 days before due
+      const reminderDate = new Date(dueDate);
+      reminderDate.setDate(reminderDate.getDate() - 3);
+      const reminderDateStr = reminderDate.toISOString().split("T")[0];
+
+      if (todayStr === reminderDateStr) {
+        const dueDateFormatted = dueDate.toLocaleDateString("fr-FR", {
+          day: "numeric",
+          month: "long",
+        });
+        const label = ob.type === "engagement" ? "Engagement" : "Créance";
+        const amountStr = ob.remaining_amount.toLocaleString("fr-FR");
+
+        const { data: existing } = await supabase
+          .from("notifications")
+          .select("id")
+          .eq("user_id", ob.user_id)
+          .eq("type", "obligation_reminder")
+          .gte("created_at", todayStr)
+          .limit(1);
+
+        if (!existing || existing.length === 0) {
+          notifications.push({
+            user_id: ob.user_id,
+            type: "obligation_reminder",
+            title: `${label} à venir`,
+            body: `${label} de ${amountStr} FCFA envers ${ob.person_name} échoit le ${dueDateFormatted}.`,
+            related_tontine_id: ob.linked_tontine_id,
+          });
+        }
+      }
+
+      // Late — 1 day after due
+      const lateDate = new Date(dueDate);
+      lateDate.setDate(lateDate.getDate() + 1);
+      const lateDateStr = lateDate.toISOString().split("T")[0];
+
+      if (todayStr === lateDateStr) {
+        const label = ob.type === "engagement" ? "Engagement" : "Créance";
+        const amountStr = ob.remaining_amount.toLocaleString("fr-FR");
+
+        const { data: existing } = await supabase
+          .from("notifications")
+          .select("id")
+          .eq("user_id", ob.user_id)
+          .eq("type", "obligation_late")
+          .gte("created_at", todayStr)
+          .limit(1);
+
+        if (!existing || existing.length === 0) {
+          notifications.push({
+            user_id: ob.user_id,
+            type: "obligation_late",
+            title: `${label} en retard`,
+            body: `${label} de ${amountStr} FCFA envers ${ob.person_name} était dû hier. Pensez à le régulariser.`,
+            related_tontine_id: ob.linked_tontine_id,
+          });
         }
       }
     }
