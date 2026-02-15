@@ -192,15 +192,24 @@ const Report = () => {
       return `<tr><td>${o.person_name}</td><td>${o.description || "-"}</td><td class="r">${formatXAF(o.remaining_amount)}</td><td>${o.due_date ? new Date(o.due_date).toLocaleDateString("fr-FR") : "-"}</td><td style="color:${s.label === "En retard" ? "#dc2626" : "#16a34a"}">${s.label}</td></tr>`;
     }).join("");
 
-    // Generate inline SVG charts
+    // Generate inline SVG charts — vertical histogram
     const maxVal = Math.max(stats.income, stats.expenses) || 1;
-    const barW1 = Math.round((stats.income / maxVal) * 280);
-    const barW2 = Math.round((stats.expenses / maxVal) * 280);
-    const barChartSVG = `<svg width="320" height="80" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="5" width="${barW1}" height="28" rx="4" fill="#16a34a"/>
-      <text x="${barW1 + 8}" y="24" font-size="11" fill="#1a1a1a" font-weight="600">${formatXAF(stats.income)}</text>
-      <rect x="0" y="45" width="${barW2}" height="28" rx="4" fill="#dc2626"/>
-      <text x="${barW2 + 8}" y="64" font-size="11" fill="#1a1a1a" font-weight="600">${formatXAF(stats.expenses)}</text>
+    const chartH = 120;
+    const barMaxH = 100;
+    const barW = 50;
+    const gap = 30;
+    const svgW = barW * 2 + gap + 40;
+    const h1 = Math.round((stats.income / maxVal) * barMaxH);
+    const h2 = Math.round((stats.expenses / maxVal) * barMaxH);
+    const y1 = chartH - h1 + 10;
+    const y2 = chartH - h2 + 10;
+    const barChartSVG = `<svg width="${svgW}" height="${chartH + 40}" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="${y1}" width="${barW}" height="${h1}" rx="4" fill="#16a34a"/>
+      <text x="${20 + barW / 2}" y="${y1 - 6}" font-size="10" fill="#16a34a" font-weight="700" text-anchor="middle">${formatXAF(stats.income)}</text>
+      <text x="${20 + barW / 2}" y="${chartH + 24}" font-size="10" fill="#333" text-anchor="middle">Entrées</text>
+      <rect x="${20 + barW + gap}" y="${y2}" width="${barW}" height="${h2}" rx="4" fill="#dc2626"/>
+      <text x="${20 + barW + gap + barW / 2}" y="${y2 - 6}" font-size="10" fill="#dc2626" font-weight="700" text-anchor="middle">${formatXAF(stats.expenses)}</text>
+      <text x="${20 + barW + gap + barW / 2}" y="${chartH + 24}" font-size="10" fill="#333" text-anchor="middle">Dépenses</text>
     </svg>`;
 
     const generatePieSVG = (data: {name: string; value: number; pct: string}[], colors: string[]) => {
@@ -306,10 +315,10 @@ ${visualSection}
 
 <div class="page-break"></div>
 
-${incomeTxs.length > 0 ? `<h2>Entrées</h2>
+    ${incomeTxs.length > 0 ? `<h2 style="color:#16a34a;border-bottom-color:#16a34a;">Entrées</h2>
 <table><thead><tr><th>Code</th><th>Date</th><th>Source</th><th>Description</th><th class="r">Montant</th></tr></thead><tbody>${incomeRows}</tbody></table>` : ""}
 
-${expenseTxs.length > 0 ? `<h2>Dépenses</h2>
+${expenseTxs.length > 0 ? `<h2 style="color:#dc2626;border-bottom-color:#dc2626;">Dépenses</h2>
 <table><thead><tr><th>Code</th><th>Date</th><th>Catégorie</th><th>Bénéficiaire</th><th class="r">Montant</th></tr></thead><tbody>${expenseRows}</tbody></table>` : ""}
 
 ${stats.sortedCats.length > 0 || activeEngagements.length > 0 || activeCreances.length > 0 ? '<div class="page-break"></div>' : ""}
