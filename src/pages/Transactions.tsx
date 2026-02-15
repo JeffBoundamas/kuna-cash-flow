@@ -9,7 +9,7 @@ import {
 import { formatXAF, formatXAFShort } from "@/lib/currency";
 import { useAllTransactions, useDeleteTransaction } from "@/hooks/use-transactions";
 import { useCategories } from "@/hooks/use-categories";
-import { useAccounts } from "@/hooks/use-accounts";
+import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import AddTransactionSheet from "@/components/transactions/AddTransactionSheet";
@@ -28,7 +28,7 @@ const Transactions = () => {
 
   const { data: transactions = [], isLoading } = useAllTransactions();
   const { data: categories = [] } = useCategories();
-  const { data: accounts = [] } = useAccounts();
+  const { data: accounts = [] } = usePaymentMethodsWithBalance();
   const deleteTx = useDeleteTransaction();
 
   const catMap = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
@@ -83,7 +83,7 @@ const Transactions = () => {
   // Running balance per account
   const runningBalances = useMemo(() => {
     const balances: Record<string, number> = {};
-    accounts.forEach(a => { balances[a.id] = a.balance; });
+    accounts.forEach(a => { balances[a.id] = a.currentBalance; });
     return balances;
   }, [accounts]);
 

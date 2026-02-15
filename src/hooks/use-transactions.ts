@@ -93,17 +93,18 @@ export const useAddTransaction = () => {
         return;
       }
 
-      const { error } = await supabase.from("transactions").insert([{
+      const payload = {
         user_id: user!.id,
         account_id: tx.account_id,
         category_id: tx.category_id,
         amount: tx.amount,
         label: tx.label || "Transaction",
-        status: tx.status,
         date: tx.date,
         sms_reference: tx.sms_reference,
         payment_method_id: tx.payment_method_id || tx.account_id,
-      }]);
+        ...(tx.status ? { status: tx.status } : {}),
+      };
+      const { error } = await supabase.from("transactions").insert([payload]);
       if (error) throw error;
     },
     onSuccess: () => {
