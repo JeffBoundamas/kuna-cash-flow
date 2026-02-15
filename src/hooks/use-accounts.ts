@@ -37,8 +37,8 @@ export const useAddAccount = () => {
 export const useUpdateAccount = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const { error } = await supabase.from("accounts").update({ name }).eq("id", id);
+    mutationFn: async ({ id, name, balance_threshold }: { id: string; name: string; balance_threshold?: number | null }) => {
+      const { error } = await supabase.from("accounts").update({ name, balance_threshold }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["accounts"] }),

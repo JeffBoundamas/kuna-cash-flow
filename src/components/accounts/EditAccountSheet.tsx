@@ -18,19 +18,22 @@ const EditAccountSheet = ({ open, onOpenChange, account, onDeleted }: Props) => 
   const updateAccount = useUpdateAccount();
   const deleteAccount = useDeleteAccount();
   const [name, setName] = useState("");
+  const [threshold, setThreshold] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (account) {
       setName(account.name);
+      setThreshold(account.balance_threshold != null ? String(account.balance_threshold) : "");
       setConfirmDelete(false);
     }
   }, [account]);
 
   const handleSave = () => {
     if (!account || !name.trim()) return;
+    const thresholdVal = threshold.trim() ? Number(threshold) : null;
     updateAccount.mutate(
-      { id: account.id, name: name.trim() },
+      { id: account.id, name: name.trim(), balance_threshold: thresholdVal },
       {
         onSuccess: () => {
           toast.success("Compte mis à jour");
@@ -67,6 +70,19 @@ const EditAccountSheet = ({ open, onOpenChange, account, onDeleted }: Props) => 
           <div className="space-y-2">
             <Label>Nom du compte</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Seuil d'alerte (FCFA)</Label>
+            <Input
+              type="number"
+              placeholder="Ex: 50000"
+              value={threshold}
+              onChange={(e) => setThreshold(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Vous serez alerté quand le solde passe sous ce montant. Laissez vide pour désactiver.
+            </p>
           </div>
 
           <Button className="w-full" onClick={handleSave} disabled={updateAccount.isPending}>

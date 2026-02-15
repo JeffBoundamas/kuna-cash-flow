@@ -17,6 +17,7 @@ export type Database = {
       accounts: {
         Row: {
           balance: number
+          balance_threshold: number | null
           created_at: string
           icon: string
           id: string
@@ -27,6 +28,7 @@ export type Database = {
         }
         Insert: {
           balance?: number
+          balance_threshold?: number | null
           created_at?: string
           icon?: string
           id?: string
@@ -37,6 +39,7 @@ export type Database = {
         }
         Update: {
           balance?: number
+          balance_threshold?: number | null
           created_at?: string
           icon?: string
           id?: string

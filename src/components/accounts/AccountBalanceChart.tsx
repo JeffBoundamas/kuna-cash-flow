@@ -1,46 +1,43 @@
-import { useMemo } from "react";
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { useMemo, useState } from "react";
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine } from "recharts";
 import { formatXAF } from "@/lib/currency";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Transaction } from "@/lib/types";
+
+type Period = "week" | "month" | "year";
+
+const periodConfig: Record<Period, { days: number; label: string; interval: number }> = {
+  week: { days: 7, label: "7j", interval: 1 },
+  month: { days: 30, label: "30j", interval: 6 },
+  year: { days: 365, label: "1an", interval: 30 },
+};
 
 interface Props {
   transactions: Transaction[];
   currentBalance: number;
+  threshold?: number | null;
 }
 
-const AccountBalanceChart = ({ transactions, currentBalance }: Props) => {
+const AccountBalanceChart = ({ transactions, currentBalance, threshold }: Props) => {
+  const [period, setPeriod] = useState<Period>("month");
+  const config = periodConfig[period];
+
   const data = useMemo(() => {
     const today = new Date();
-    const days: { date: string; balance: number }[] = [];
-
-    // Build daily deltas for last 30 days
-    const deltaMap = new Map<string, number>();
-    for (const tx of transactions) {
-      const d = tx.date.slice(0, 10);
-      deltaMap.set(d, (deltaMap.get(d) ?? 0) + tx.amount);
-    }
-
-    // Work backwards from current balance
-    let bal = currentBalance;
     const dates: string[] = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < config.days; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       dates.push(d.toISOString().slice(0, 10));
     }
     dates.reverse();
 
-    // Subtract future deltas to reconstruct past balances
-    let runningBal = currentBalance;
-    // First subtract all deltas from today back to compute day-30 balance
-    for (let i = dates.length - 1; i >= 0; i--) {
-      const delta = deltaMap.get(dates[i]) ?? 0;
-      if (i < dates.length - 1) {
-        // not the last date
-      }
+    const deltaMap = new Map<string, number>();
+    for (const tx of transactions) {
+      const d = tx.date.slice(0, 10);
+      deltaMap.set(d, (deltaMap.get(d) ?? 0) + tx.amount);
     }
 
-    // Simpler approach: reconstruct from the end
     const balances = new Array(dates.length).fill(0);
     balances[dates.length - 1] = currentBalance;
     for (let i = dates.length - 2; i >= 0; i--) {
@@ -48,17 +45,31 @@ const AccountBalanceChart = ({ transactions, currentBalance }: Props) => {
       balances[i] = balances[i + 1] - nextDayDelta;
     }
 
+    const dateFormat: Intl.DateTimeFormatOptions =
+      period === "year"
+        ? { month: "short" }
+        : { day: "numeric", month: "short" };
+
     return dates.map((date, i) => ({
-      date: new Date(date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }),
+      date: new Date(date).toLocaleDateString("fr-FR", dateFormat),
       balance: balances[i],
     }));
-  }, [transactions, currentBalance]);
+  }, [transactions, currentBalance, config.days, period]);
 
   if (data.length === 0) return null;
 
   return (
     <div className="rounded-xl border bg-card p-3">
-      <p className="text-xs font-medium text-muted-foreground mb-2">Évolution du solde (30j)</p>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-medium text-muted-foreground">Évolution du solde</p>
+        <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v as Period)} size="sm">
+          {(["week", "month", "year"] as Period[]).map((p) => (
+            <ToggleGroupItem key={p} value={p} className="text-[10px] px-2 h-6">
+              {periodConfig[p].label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </div>
       <div className="h-32">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
@@ -73,7 +84,7 @@ const AccountBalanceChart = ({ transactions, currentBalance }: Props) => {
               tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
               tickLine={false}
               axisLine={false}
-              interval={6}
+              interval={config.interval}
             />
             <YAxis hide domain={["auto", "auto"]} />
             <Tooltip
@@ -89,6 +100,14 @@ const AccountBalanceChart = ({ transactions, currentBalance }: Props) => {
                 );
               }}
             />
+            {threshold != null && (
+              <ReferenceLine
+                y={threshold}
+                stroke="hsl(var(--destructive))"
+                strokeDasharray="4 4"
+                strokeWidth={1.5}
+              />
+            )}
             <Area
               type="monotone"
               dataKey="balance"
