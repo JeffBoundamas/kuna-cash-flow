@@ -109,9 +109,16 @@
     @apply border-border;
   }
 
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'DM Sans', system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    touch-action: pan-y;
   }
 
   h1, h2, h3, h4, h5, h6 {
