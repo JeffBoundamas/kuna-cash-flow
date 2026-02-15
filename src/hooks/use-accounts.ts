@@ -33,3 +33,25 @@ export const useAddAccount = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["accounts"] }),
   });
 };
+
+export const useUpdateAccount = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase.from("accounts").update({ name }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["accounts"] }),
+  });
+};
+
+export const useDeleteAccount = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("accounts").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["accounts"] }),
+  });
+};
