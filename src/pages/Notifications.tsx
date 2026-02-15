@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCheck, Trash2, Bell, Coins, AlertTriangle, PartyPopper } from "lucide-react";
+import { ArrowLeft, CheckCheck, Trash2, Bell, Coins, AlertTriangle, PartyPopper, HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from "@/hooks/use-notifications";
 import { formatDistanceToNow } from "date-fns";
@@ -13,6 +13,8 @@ const typeIcons: Record<string, typeof Bell> = {
   pot_upcoming: PartyPopper,
   cotisation_logged: Coins,
   pot_received: PartyPopper,
+  obligation_reminder: HandCoins,
+  obligation_late: AlertTriangle,
 };
 
 const NotificationsPage = () => {

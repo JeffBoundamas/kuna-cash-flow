@@ -250,6 +250,7 @@ const TontineDetailView = ({ tontine, onBack }: Props) => {
         tontineName={tontine.name}
         amount={tontine.contribution_amount}
         currentCycle={tontine.current_cycle}
+        totalMembers={tontine.total_members}
       />
 
       {myMember && (
