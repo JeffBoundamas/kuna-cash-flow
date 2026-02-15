@@ -50,7 +50,7 @@ const Portfolio = () => {
       </div>
 
       {/* Tab content */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto">
+      <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden">
         {activeTab === "comptes" && <Accounts />}
         {activeTab === "tontines" && <TontinesTab />}
         {activeTab === "creances" && <CreancesTab />}

@@ -213,11 +213,11 @@ const Accounts = () => {
                 key={pm.id}
                 onClick={() => setSelectedPMId(pm.id)}
                 className={cn(
-                  "w-full rounded-2xl border border-border bg-card p-4 text-left hover:shadow-sm transition-all active:scale-[0.98]",
+                  "w-full rounded-2xl border border-border bg-card p-3 text-left hover:shadow-sm transition-all active:scale-[0.98] overflow-hidden",
                   !pm.is_active && "opacity-50"
                 )}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0 overflow-hidden">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0"
                     style={{ backgroundColor: pm.color + "20" }}>
                     <Icon className="h-5 w-5" style={{ color: pm.color }} />
@@ -239,7 +239,7 @@ const Accounts = () => {
                       </p>
                     )}
                   </div>
-                  <p className={cn("text-sm font-bold font-display text-right flex-shrink-0", pm.currentBalance >= 0 ? "text-primary" : "text-destructive")}>
+                  <p className={cn("text-sm font-bold font-display text-right flex-shrink-0 whitespace-nowrap", pm.currentBalance >= 0 ? "text-primary" : "text-destructive")}>
                     {formatXAF(pm.currentBalance)}
                   </p>
                 </div>
