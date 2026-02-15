@@ -14,6 +14,7 @@ import { useCategories } from "@/hooks/use-categories";
 import { useAccounts } from "@/hooks/use-accounts";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import type { Transaction, Category, Account } from "@/lib/types";
 
 const Report = () => {
@@ -54,21 +55,25 @@ const Report = () => {
   const stats = useMemo(() => {
     let income = 0;
     let expenses = 0;
-    const byCat: Record<string, number> = {};
+    const byCat: Record<string, { amount: number; color: string }> = {};
     const byAcc: Record<string, number> = {};
 
     filtered.forEach((t) => {
       if (t.amount > 0) income += t.amount;
       else {
         expenses += Math.abs(t.amount);
-        const catName = catMap.get(t.category_id)?.name ?? "Autre";
-        byCat[catName] = (byCat[catName] ?? 0) + Math.abs(t.amount);
+        const cat = catMap.get(t.category_id);
+        const catName = cat?.name ?? "Autre";
+        if (!byCat[catName]) byCat[catName] = { amount: 0, color: cat?.color ?? "#888888" };
+        byCat[catName].amount += Math.abs(t.amount);
       }
       const accName = accMap.get(t.account_id)?.name ?? "Inconnu";
       byAcc[accName] = (byAcc[accName] ?? 0) + Math.abs(t.amount);
     });
 
-    const sortedCats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+    const sortedCats = Object.entries(byCat)
+      .map(([name, { amount, color }]) => ({ name, amount, color }))
+      .sort((a, b) => b.amount - a.amount);
     const sortedAccs = Object.entries(byAcc).sort((a, b) => b[1] - a[1]);
 
     return { income, expenses, net: income - expenses, count: filtered.length, sortedCats, sortedAccs };
@@ -94,7 +99,7 @@ const Report = () => {
   const handlePrint = () => {
     const catRows = stats.sortedCats
       .map(
-        ([cat, amt]) => {
+        ({ name: cat, amount: amt }) => {
           const pct = stats.expenses > 0 ? ((amt / stats.expenses) * 100).toFixed(1) : "0";
           return `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee">${cat}</td><td style="padding:6px 12px;border-bottom:1px solid #eee;text-align:right">${formatXAF(amt)}</td><td style="padding:6px 12px;border-bottom:1px solid #eee;text-align:right">${pct}%</td></tr>`;
         }
@@ -326,10 +331,60 @@ const Report = () => {
 
       {/* Category breakdown */}
       {stats.sortedCats.length > 0 && (
-        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <div className="rounded-xl border border-border bg-card p-4 space-y-4">
           <h2 className="text-sm font-bold font-display">Dépenses par Catégorie</h2>
+          
+          {/* Donut chart */}
+          <div className="flex items-center gap-4">
+            <div className="w-36 h-36 flex-shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats.sortedCats.map(c => ({ name: c.name, value: c.amount }))}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={35}
+                    outerRadius={60}
+                    dataKey="value"
+                    strokeWidth={2}
+                    stroke="hsl(var(--card))"
+                  >
+                    {stats.sortedCats.map((c, i) => (
+                      <Cell key={i} fill={c.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) => formatXAF(value)}
+                    contentStyle={{
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                      fontSize: "11px",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 space-y-1.5 min-w-0">
+              {stats.sortedCats.map(({ name, amount, color }) => {
+                const pct = stats.expenses > 0 ? (amount / stats.expenses) * 100 : 0;
+                return (
+                  <div key={name} className="flex items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="text-[11px] text-foreground truncate flex-1">{name}</span>
+                    <span className="text-[10px] text-muted-foreground flex-shrink-0">{pct.toFixed(1)}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Bars */}
           <div className="space-y-2">
-            {stats.sortedCats.map(([name, amount]) => {
+            {stats.sortedCats.map(({ name, amount, color }) => {
               const pct = stats.expenses > 0 ? (amount / stats.expenses) * 100 : 0;
               return (
                 <div key={name} className="space-y-1">
@@ -342,8 +397,8 @@ const Report = () => {
                   </div>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${Math.min(pct, 100)}%` }}
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: color }}
                     />
                   </div>
                 </div>
