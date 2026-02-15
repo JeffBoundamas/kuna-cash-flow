@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useLogContribution } from "@/hooks/use-tontines";
+import { useCreateNotification } from "@/hooks/use-notifications";
 import { formatXAF } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -15,12 +16,14 @@ interface Props {
   tontineName: string;
   amount: number;
   currentCycle: number;
+  totalMembers?: number;
 }
 
-const LogContributionSheet = ({ open, onOpenChange, tontineId, tontineName, amount, currentCycle }: Props) => {
+const LogContributionSheet = ({ open, onOpenChange, tontineId, tontineName, amount, currentCycle, totalMembers }: Props) => {
   const { data: accounts = [] } = useAccounts();
   const [accountId, setAccountId] = useState("");
   const logContribution = useLogContribution();
+  const createNotification = useCreateNotification();
 
   const handleSubmit = () => {
     if (!accountId) {
@@ -37,7 +40,14 @@ const LogContributionSheet = ({ open, onOpenChange, tontineId, tontineName, amou
       },
       {
         onSuccess: () => {
-          toast.success("Cotisation enregistrée");
+          const toastMsg = `Cotisation de ${formatXAF(amount)} enregistrée pour ${tontineName} — Tour ${currentCycle}/${totalMembers ?? "?"}`;
+          toast.success(toastMsg);
+          createNotification.mutate({
+            type: "cotisation_logged",
+            title: "Cotisation enregistrée",
+            body: toastMsg,
+            related_tontine_id: tontineId,
+          });
           onOpenChange(false);
         },
         onError: () => toast.error("Erreur"),
