@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import BottomNav from "./BottomNav";
 import QuickAddModal from "@/components/transactions/QuickAddModal";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
+import PushNotificationBanner from "@/components/pwa/PushNotificationBanner";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useAppBootstrap } from "@/hooks/use-app-bootstrap";
 import { useOfflineQueue } from "@/hooks/use-offline-queue";
@@ -42,6 +43,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
       <QuickAddModal open={showQuickAdd} onOpenChange={setShowQuickAdd} />
       <InstallPrompt />
+      <PushNotificationBanner />
       <BottomNav />
     </div>
   );
