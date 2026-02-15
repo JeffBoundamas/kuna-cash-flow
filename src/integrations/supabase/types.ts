@@ -401,6 +401,7 @@ export type Database = {
           is_current_user: boolean
           member_name: string
           payout_date: string | null
+          phone_number: string | null
           position_in_order: number
           tontine_id: string
           user_id: string
@@ -412,6 +413,7 @@ export type Database = {
           is_current_user?: boolean
           member_name: string
           payout_date?: string | null
+          phone_number?: string | null
           position_in_order?: number
           tontine_id: string
           user_id: string
@@ -423,6 +425,7 @@ export type Database = {
           is_current_user?: boolean
           member_name?: string
           payout_date?: string | null
+          phone_number?: string | null
           position_in_order?: number
           tontine_id?: string
           user_id?: string

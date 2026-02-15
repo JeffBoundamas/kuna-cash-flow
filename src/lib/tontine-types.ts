@@ -25,6 +25,7 @@ export interface TontineMember {
   is_current_user: boolean;
   has_received_pot: boolean;
   payout_date: string | null;
+  phone_number: string | null;
   created_at: string;
 }
 

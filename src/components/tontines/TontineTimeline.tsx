@@ -7,9 +7,10 @@ import type { TontineMember } from "@/lib/tontine-types";
 interface Props {
   members: TontineMember[];
   currentCycle: number;
+  onMemberTap?: (member: TontineMember) => void;
 }
 
-const TontineTimeline = ({ members, currentCycle }: Props) => {
+const TontineTimeline = ({ members, currentCycle, onMemberTap }: Props) => {
   const sortedMembers = useMemo(
     () => [...members].sort((a, b) => a.position_in_order - b.position_in_order),
     [members]
@@ -23,11 +24,15 @@ const TontineTimeline = ({ members, currentCycle }: Props) => {
           const isCurrent = member.position_in_order === currentCycle;
           const isMe = member.is_current_user;
           const isMyTurn = isCurrent && isMe;
+          const hasPhone = !!member.phone_number;
 
           return (
             <div key={member.id} className="flex items-start">
               {/* Node */}
-              <div className="flex flex-col items-center gap-1.5 relative">
+              <div
+                className="flex flex-col items-center gap-1.5 relative cursor-pointer"
+                onClick={() => onMemberTap?.(member)}
+              >
                 {/* "C'est votre tour" callout */}
                 {isMyTurn && (
                   <motion.div
@@ -98,6 +103,9 @@ const TontineTimeline = ({ members, currentCycle }: Props) => {
                   )}
                   {isReceived && (
                     <span className="text-[9px] text-muted-foreground">Reçu ✓</span>
+                  )}
+                  {hasPhone && !isReceived && !isCurrent && (
+                    <span className="text-[8px] text-[#25D366]">📱</span>
                   )}
                 </div>
               </div>

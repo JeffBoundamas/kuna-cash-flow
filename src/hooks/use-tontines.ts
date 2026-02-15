@@ -403,9 +403,126 @@ export const useDeleteTontine = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      // Delete linked obligations first
+      await supabase.from("obligations").delete().eq("linked_tontine_id", id);
       const { error } = await supabase.from("tontines").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tontines"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tontines"] });
+      qc.invalidateQueries({ queryKey: ["obligations"] });
+    },
+  });
+};
+
+export const useUpdateTontine = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      name: string;
+      contribution_amount: number;
+      frequency: "weekly" | "monthly";
+      start_date: string;
+    }) => {
+      const { error } = await supabase
+        .from("tontines")
+        .update({
+          name: input.name,
+          contribution_amount: input.contribution_amount,
+          frequency: input.frequency,
+          start_date: input.start_date,
+        })
+        .eq("id", input.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tontines"] });
+    },
+  });
+};
+
+export const useUpdateTontineMember = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      member_name?: string;
+      position_in_order?: number;
+      is_current_user?: boolean;
+      phone_number?: string | null;
+      payout_date?: string | null;
+    }) => {
+      const { id, ...updates } = input;
+      const { error } = await supabase
+        .from("tontine_members")
+        .update(updates)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tontine_members"] });
+    },
+  });
+};
+
+export const useAddTontineMember = () => {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (input: {
+      tontine_id: string;
+      member_name: string;
+      position_in_order: number;
+      payout_date: string | null;
+      phone_number?: string | null;
+    }) => {
+      if (!user) throw new Error("Not authenticated");
+      const { data, error } = await supabase
+        .from("tontine_members")
+        .insert({
+          ...input,
+          user_id: user.id,
+          is_current_user: false,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tontine_members"] });
+    },
+  });
+};
+
+export const useDeleteTontineMember = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tontine_members").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tontine_members"] });
+    },
+  });
+};
+
+export const useBatchUpdateMemberPositions = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (members: { id: string; position_in_order: number; payout_date: string | null }[]) => {
+      for (const m of members) {
+        const { error } = await supabase
+          .from("tontine_members")
+          .update({ position_in_order: m.position_in_order, payout_date: m.payout_date })
+          .eq("id", m.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tontine_members"] });
+    },
   });
 };

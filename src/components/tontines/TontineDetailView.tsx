@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { ArrowLeft, Trash2, HandCoins, Gift, TrendingUp, Clock, CalendarCheck } from "lucide-react";
+import { ArrowLeft, Trash2, HandCoins, Gift, TrendingUp, Clock, CalendarCheck, Pencil, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatXAF } from "@/lib/currency";
 import { useTontineMembers, useTontinePayments, useDeleteTontine } from "@/hooks/use-tontines";
@@ -12,7 +12,10 @@ import TontineTimeline from "./TontineTimeline";
 import LogContributionSheet from "./LogContributionSheet";
 import ReceivePotSheet from "./ReceivePotSheet";
 import TontineCelebration from "./TontineCelebration";
-import type { Tontine } from "@/lib/tontine-types";
+import EditTontineSheet from "./EditTontineSheet";
+import ManageMembersSheet from "./ManageMembersSheet";
+import MemberInfoSheet from "./MemberInfoSheet";
+import type { Tontine, TontineMember } from "@/lib/tontine-types";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -25,11 +28,13 @@ const TontineDetailView = ({ tontine, onBack }: Props) => {
   const { data: members = [] } = useTontineMembers(tontine.id);
   const { data: payments = [] } = useTontinePayments(tontine.id);
   const { data: accounts = [] } = useAccounts();
-  const deleteTontine = useDeleteTontine();
 
   const [showContribution, setShowContribution] = useState(false);
   const [showReceivePot, setShowReceivePot] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showManageMembers, setShowManageMembers] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<TontineMember | null>(null);
 
   const handleCelebrationDone = useCallback(() => setShowCelebration(false), []);
 
@@ -64,16 +69,6 @@ const TontineDetailView = ({ tontine, onBack }: Props) => {
 
   const remainingCycles = tontine.total_members - myContributions.length;
 
-  const handleDelete = () => {
-    if (!confirm("Supprimer cette tontine ?")) return;
-    deleteTontine.mutate(tontine.id, {
-      onSuccess: () => {
-        toast.success("Tontine supprimée");
-        onBack();
-      },
-    });
-  };
-
   return (
     <div className="pb-28 space-y-5">
       {/* Header */}
@@ -93,8 +88,8 @@ const TontineDetailView = ({ tontine, onBack }: Props) => {
         )}>
           {tontine.status === "active" ? "Active" : "Terminée"}
         </Badge>
-        <button onClick={handleDelete} className="text-muted-foreground hover:text-destructive p-1.5">
-          <Trash2 className="h-4 w-4" />
+        <button onClick={() => setShowEdit(true)} className="text-muted-foreground hover:text-foreground p-1.5">
+          <Pencil className="h-4 w-4" />
         </button>
       </div>
 
@@ -119,8 +114,21 @@ const TontineDetailView = ({ tontine, onBack }: Props) => {
       <div className="px-4">
         <h2 className="text-sm font-semibold font-display text-muted-foreground mb-2">Ordre de passage</h2>
         <Card className="p-3 pt-8 border-border/50">
-          <TontineTimeline members={members} currentCycle={tontine.current_cycle} />
+          <TontineTimeline
+            members={members}
+            currentCycle={tontine.current_cycle}
+            onMemberTap={(m) => setSelectedMember(m)}
+          />
         </Card>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full mt-2 gap-2 text-xs text-muted-foreground"
+          onClick={() => setShowManageMembers(true)}
+        >
+          <Users className="h-3.5 w-3.5" />
+          Gérer les membres
+        </Button>
       </div>
 
       {/* Stats row */}
@@ -261,6 +269,29 @@ const TontineDetailView = ({ tontine, onBack }: Props) => {
         show={showCelebration}
         onDone={handleCelebrationDone}
         potAmount={formatXAF(potAmount)}
+      />
+
+      <EditTontineSheet
+        open={showEdit}
+        onOpenChange={setShowEdit}
+        tontine={tontine}
+        onDeleted={onBack}
+      />
+
+      <ManageMembersSheet
+        open={showManageMembers}
+        onOpenChange={setShowManageMembers}
+        tontine={tontine}
+      />
+
+      <MemberInfoSheet
+        open={!!selectedMember}
+        onOpenChange={(open) => !open && setSelectedMember(null)}
+        member={selectedMember}
+        onAddPhone={() => {
+          setSelectedMember(null);
+          setShowManageMembers(true);
+        }}
       />
     </div>
   );
