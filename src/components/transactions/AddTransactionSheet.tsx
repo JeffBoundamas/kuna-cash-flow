@@ -152,6 +152,7 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="w-full rounded-xl border border-border bg-background px-4 py-3 text-2xl font-bold font-display focus:outline-none focus:ring-2 focus:ring-ring text-center"
+              style={{ fontSize: "16px" }}
             />
           </div>
 
@@ -163,7 +164,7 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
               placeholder="Ex: Marché du samedi"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -174,7 +175,7 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -204,7 +205,7 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
-              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             />
           </div>
 
