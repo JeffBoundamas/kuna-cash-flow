@@ -10,6 +10,7 @@ export interface Account {
   type: AccountType;
   balance: number;
   icon: string;
+  balance_threshold: number | null;
   created_at: string;
   updated_at: string;
 }

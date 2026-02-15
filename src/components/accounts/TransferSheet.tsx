@@ -59,6 +59,16 @@ const TransferSheet = ({ open, onOpenChange }: TransferSheetProps) => {
 
       qc.invalidateQueries({ queryKey: ["accounts"] });
 
+      // Check threshold alert on source account after transfer
+      const newFromBalance = fromAcc.balance - numAmount;
+      if (fromAcc.balance_threshold != null && newFromBalance < fromAcc.balance_threshold) {
+        toast({
+          title: "⚠️ Solde bas",
+          description: `Le solde de ${fromAcc.name} (${formatXAF(newFromBalance)}) est passé sous le seuil de ${formatXAF(fromAcc.balance_threshold)}`,
+          variant: "destructive",
+        });
+      }
+
       toast({
         title: "Transfert effectué ✓",
         description: `${formatXAF(numAmount)} de ${fromAcc.name} vers ${toAcc.name}`,

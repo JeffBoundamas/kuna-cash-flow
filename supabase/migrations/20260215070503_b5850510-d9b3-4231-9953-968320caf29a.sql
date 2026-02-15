@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN balance_threshold bigint DEFAULT NULL;

@@ -104,7 +104,7 @@ const Accounts = () => {
           </p>
         </div>
 
-        <AccountBalanceChart transactions={accountTransactions} currentBalance={selectedAccount.balance} />
+        <AccountBalanceChart transactions={accountTransactions} currentBalance={selectedAccount.balance} threshold={selectedAccount.balance_threshold} />
         <AccountMonthlySummary transactions={accountTransactions} />
 
         <p className="text-xs text-muted-foreground">{accountTransactions.length} transactions</p>
