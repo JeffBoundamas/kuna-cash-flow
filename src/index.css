@@ -113,8 +113,8 @@
   }
 
   html, body {
-    overflow-x: hidden;
     width: 100%;
+    max-width: 100vw;
   }
 
   body {
@@ -144,5 +144,12 @@
   }
   .text-emerald-dark {
     color: hsl(var(--emerald-dark));
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
