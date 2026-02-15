@@ -1,14 +1,13 @@
 import { NavLink as RouterNavLink } from "react-router-dom";
-import { LayoutDashboard, ArrowLeftRight, PieChart, Target, Wallet, FileText, Users } from "lucide-react";
+import { LayoutDashboard, ArrowLeftRight, PieChart, Wallet, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/", icon: LayoutDashboard, label: "Tableau" },
   { to: "/transactions", icon: ArrowLeftRight, label: "Mouvements" },
-  { to: "/tontines", icon: Users, label: "Tontines" },
-  { to: "/report", icon: FileText, label: "Rapport" },
   { to: "/budget", icon: PieChart, label: "Budget" },
-  { to: "/goals", icon: Target, label: "Objectifs" },
+  { to: "/portfolio", icon: Wallet, label: "Portefeuille" },
+  { to: "/more", icon: MoreHorizontal, label: "Plus" },
 ];
 
 const BottomNav = () => {
