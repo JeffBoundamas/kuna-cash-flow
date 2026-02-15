@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { PiggyBank } from "lucide-react";
 import Accounts from "@/pages/Accounts";
+import CreancesTab from "@/components/obligations/CreancesTab";
 
 const TABS = [
   { key: "comptes", label: "Comptes" },
@@ -64,12 +65,7 @@ const Portfolio = () => {
             label="Tontines"
           />
         )}
-        {activeTab === "creances" && (
-          <ComingSoon
-            icon={<PiggyBank className="h-8 w-8 text-muted-foreground" />}
-            label="Créances"
-          />
-        )}
+        {activeTab === "creances" && <CreancesTab />}
       </div>
     </div>
   );

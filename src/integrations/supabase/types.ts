@@ -202,6 +202,110 @@ export type Database = {
         }
         Relationships: []
       }
+      obligation_payments: {
+        Row: {
+          account_id: string | null
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          obligation_id: string
+          payment_date: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          obligation_id: string
+          payment_date?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          obligation_id?: string
+          payment_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obligation_payments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "obligation_payments_obligation_id_fkey"
+            columns: ["obligation_id"]
+            isOneToOne: false
+            referencedRelation: "obligations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      obligations: {
+        Row: {
+          confidence: Database["public"]["Enums"]["obligation_confidence"]
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          linked_tontine_id: string | null
+          person_name: string
+          remaining_amount: number
+          status: Database["public"]["Enums"]["obligation_status"]
+          total_amount: number
+          type: Database["public"]["Enums"]["obligation_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: Database["public"]["Enums"]["obligation_confidence"]
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          linked_tontine_id?: string | null
+          person_name: string
+          remaining_amount: number
+          status?: Database["public"]["Enums"]["obligation_status"]
+          total_amount: number
+          type: Database["public"]["Enums"]["obligation_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: Database["public"]["Enums"]["obligation_confidence"]
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          linked_tontine_id?: string | null
+          person_name?: string
+          remaining_amount?: number
+          status?: Database["public"]["Enums"]["obligation_status"]
+          total_amount?: number
+          type?: Database["public"]["Enums"]["obligation_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obligations_linked_tontine_id_fkey"
+            columns: ["linked_tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -494,6 +598,9 @@ export type Database = {
       account_type: "Bank" | "Mobile Money" | "Cash" | "Tontine"
       category_nature: "Essential" | "Desire" | "Savings"
       category_type: "Income" | "Expense"
+      obligation_confidence: "certain" | "probable" | "uncertain"
+      obligation_status: "active" | "partially_paid" | "settled" | "cancelled"
+      obligation_type: "creance" | "engagement"
       tontine_frequency: "weekly" | "monthly"
       tontine_payment_type: "contribution" | "pot_received"
       tontine_status: "active" | "completed"
@@ -628,6 +735,9 @@ export const Constants = {
       account_type: ["Bank", "Mobile Money", "Cash", "Tontine"],
       category_nature: ["Essential", "Desire", "Savings"],
       category_type: ["Income", "Expense"],
+      obligation_confidence: ["certain", "probable", "uncertain"],
+      obligation_status: ["active", "partially_paid", "settled", "cancelled"],
+      obligation_type: ["creance", "engagement"],
       tontine_frequency: ["weekly", "monthly"],
       tontine_payment_type: ["contribution", "pot_received"],
       tontine_status: ["active", "completed"],
