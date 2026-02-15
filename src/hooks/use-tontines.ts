@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tontine, TontineMember, TontinePayment } from "@/lib/tontine-types";
+import type { ObligationType, ObligationConfidence } from "@/lib/obligation-types";
 
 export const useTontines = () => {
   const { user } = useAuth();
@@ -122,10 +123,75 @@ export const useCreateTontine = () => {
         .insert(members);
       if (membersError) throw membersError;
 
+      // ── Auto-create obligations ──
+      const myPosition = input.members.findIndex((m) => m.is_current_user);
+      const potTotal = input.contribution_amount * input.members.length;
+      const obligations: Array<{
+        user_id: string;
+        type: ObligationType;
+        person_name: string;
+        description: string;
+        total_amount: number;
+        remaining_amount: number;
+        due_date: string;
+        confidence: ObligationConfidence;
+        status: "active";
+        linked_tontine_id: string;
+      }> = [];
+
+      // Engagements for each future contribution cycle
+      for (let cycle = 0; cycle < input.members.length; cycle++) {
+        const dueDate = new Date(input.start_date);
+        if (input.frequency === "monthly") {
+          dueDate.setMonth(dueDate.getMonth() + cycle);
+        } else {
+          dueDate.setDate(dueDate.getDate() + cycle * 7);
+        }
+        obligations.push({
+          user_id: user.id,
+          type: "engagement",
+          person_name: input.name,
+          description: `Cotisation ${input.name} - Tour ${cycle + 1}`,
+          total_amount: input.contribution_amount,
+          remaining_amount: input.contribution_amount,
+          due_date: dueDate.toISOString().split("T")[0],
+          confidence: "certain",
+          status: "active",
+          linked_tontine_id: tontine.id,
+        });
+      }
+
+      // Créance for the pot to receive
+      if (myPosition >= 0) {
+        const payoutDate = new Date(input.start_date);
+        if (input.frequency === "monthly") {
+          payoutDate.setMonth(payoutDate.getMonth() + myPosition);
+        } else {
+          payoutDate.setDate(payoutDate.getDate() + myPosition * 7);
+        }
+        obligations.push({
+          user_id: user.id,
+          type: "creance",
+          person_name: input.name,
+          description: `Pot à recevoir - ${input.name}`,
+          total_amount: potTotal,
+          remaining_amount: potTotal,
+          due_date: payoutDate.toISOString().split("T")[0],
+          confidence: "certain",
+          status: "active",
+          linked_tontine_id: tontine.id,
+        });
+      }
+
+      if (obligations.length > 0) {
+        await supabase.from("obligations").insert(obligations);
+      }
+
       return tontine as Tontine;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tontines"] });
+      qc.invalidateQueries({ queryKey: ["obligations"] });
     },
   });
 };
@@ -195,11 +261,34 @@ export const useLogContribution = () => {
             .eq("id", input.linked_account_id);
         }
       }
+
+      // Auto-settle matching engagement obligation
+      const { data: matchingObligation } = await supabase
+        .from("obligations")
+        .select("id, remaining_amount")
+        .eq("linked_tontine_id", input.tontine_id)
+        .eq("type", "engagement")
+        .eq("status", "active")
+        .order("due_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (matchingObligation) {
+        const newRemaining = Math.max(0, matchingObligation.remaining_amount - input.amount);
+        await supabase
+          .from("obligations")
+          .update({
+            remaining_amount: newRemaining,
+            status: newRemaining === 0 ? "settled" : "partially_paid",
+          })
+          .eq("id", matchingObligation.id);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tontine_payments"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["obligations"] });
     },
   });
 };
@@ -282,6 +371,22 @@ export const useReceivePot = () => {
         .from("tontines")
         .update({ current_cycle: input.cycle_number + 1 })
         .eq("id", input.tontine_id);
+
+      // Auto-settle créance obligation for pot received
+      const { data: creanceObligation } = await supabase
+        .from("obligations")
+        .select("id")
+        .eq("linked_tontine_id", input.tontine_id)
+        .eq("type", "creance")
+        .in("status", ["active", "partially_paid"])
+        .maybeSingle();
+
+      if (creanceObligation) {
+        await supabase
+          .from("obligations")
+          .update({ remaining_amount: 0, status: "settled" })
+          .eq("id", creanceObligation.id);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tontines"] });
@@ -289,6 +394,7 @@ export const useReceivePot = () => {
       qc.invalidateQueries({ queryKey: ["tontine_payments"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["obligations"] });
     },
   });
 };
