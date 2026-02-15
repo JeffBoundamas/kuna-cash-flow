@@ -73,7 +73,7 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-background">
+    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-between bg-background">
       {/* Skip */}
       <div className="w-full max-w-lg flex justify-end px-6 pt-6">
         <button onClick={handleSkip} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
