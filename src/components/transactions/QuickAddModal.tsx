@@ -135,7 +135,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] max-h-[90vh] overflow-y-auto p-4 gap-3">
+      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 gap-3 scrollbar-hide">
         <DialogHeader className="pb-0">
           <DialogTitle className="font-display text-base">Ajout rapide</DialogTitle>
         </DialogHeader>

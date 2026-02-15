@@ -152,7 +152,7 @@ const Accounts = () => {
                       <p className="text-sm font-medium truncate">{tx.label}</p>
                       <p className="text-[11px] text-muted-foreground truncate">{cat?.name} · {formatDate(tx.date)}</p>
                     </div>
-                    <p className={cn("text-sm font-bold font-display whitespace-nowrap", isIncome ? "text-primary" : "text-foreground")}>
+                    <p className={cn("text-sm font-bold font-display text-right flex-shrink-0", isIncome ? "text-primary" : "text-foreground")}>
                       {isIncome ? "+" : ""}{formatXAF(tx.amount)}
                     </p>
                   </div>
@@ -239,7 +239,7 @@ const Accounts = () => {
                       </p>
                     )}
                   </div>
-                  <p className={cn("text-sm font-bold font-display whitespace-nowrap", pm.currentBalance >= 0 ? "text-primary" : "text-destructive")}>
+                  <p className={cn("text-sm font-bold font-display text-right flex-shrink-0", pm.currentBalance >= 0 ? "text-primary" : "text-destructive")}>
                     {formatXAF(pm.currentBalance)}
                   </p>
                 </div>

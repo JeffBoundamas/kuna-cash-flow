@@ -98,7 +98,7 @@ const CalculatorKeypad = ({ value, onChange }: CalculatorKeypadProps) => {
       </div>
 
       {/* Keypad grid */}
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-3 gap-1.5 min-w-0 w-full">
         {keys.flat().map((key) => {
           if (key === "del") {
             return (
@@ -106,7 +106,7 @@ const CalculatorKeypad = ({ value, onChange }: CalculatorKeypadProps) => {
                 key={key}
                 onClick={backspace}
                 onDoubleClick={clear}
-                className="flex h-12 items-center justify-center rounded-xl bg-muted text-muted-foreground active:bg-border transition-colors"
+                className="flex h-12 items-center justify-center rounded-xl bg-muted text-muted-foreground active:bg-border transition-colors min-w-0"
                 aria-label="Supprimer"
               >
                 <Delete className="h-5 w-5" />
@@ -117,7 +117,7 @@ const CalculatorKeypad = ({ value, onChange }: CalculatorKeypadProps) => {
             <button
               key={key}
               onClick={() => append(key)}
-              className="flex h-12 items-center justify-center rounded-xl bg-card border border-border text-lg font-semibold font-display text-foreground active:bg-muted transition-colors"
+              className="flex h-12 items-center justify-center rounded-xl bg-card border border-border text-lg font-semibold font-display text-foreground active:bg-muted transition-colors min-w-0"
             >
               {key}
             </button>
