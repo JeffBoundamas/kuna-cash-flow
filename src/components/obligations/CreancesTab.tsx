@@ -38,8 +38,11 @@ const CreancesTab = () => {
     return groups;
   }, [active, subTab]);
 
-  if (selected) {
-    return <ObligationDetail obligation={selected} onBack={() => setSelected(null)} />;
+  // Use fresh data from query instead of stale selected snapshot
+  const freshSelected = selected ? obligations.find(o => o.id === selected.id) ?? selected : null;
+
+  if (freshSelected) {
+    return <ObligationDetail obligation={freshSelected} onBack={() => setSelected(null)} />;
   }
 
   return (
