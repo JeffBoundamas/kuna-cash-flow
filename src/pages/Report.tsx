@@ -444,44 +444,48 @@ ${activeCreances.length > 0 ? `<h2>Créances en Cours (à recevoir)</h2>
           {/* Income vs Expenses bar chart */}
           <div className="rounded-xl border border-border bg-card p-4 space-y-3">
             <h2 className="text-sm font-bold font-display">Entrées vs Dépenses</h2>
-            <ResponsiveContainer width="100%" height={120}>
-              <BarChart data={barData} layout="vertical" margin={{ left: 0, right: 10 }}>
-                <XAxis type="number" hide />
-                <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(value: number) => formatXAF(value)} />
-                <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={28}>
-                  {barData.map((entry, i) => (
-                    <Cell key={i} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ width: "100%", height: 120 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData} layout="vertical" margin={{ left: 0, right: 10 }}>
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 11 }} />
+                  <Tooltip formatter={(value: number) => formatXAF(value)} />
+                  <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={28}>
+                    {barData.map((entry, i) => (
+                      <Cell key={i} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {/* Expenses by category donut */}
           {pieDataCat.length > 0 && (
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
               <h2 className="text-sm font-bold font-display">Dépenses par Catégorie</h2>
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie
-                    data={pieDataCat}
-                    dataKey="value"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={75}
-                    paddingAngle={2}
-                    label={CustomPieLabel}
-                    labelLine={false}
-                  >
-                    {pieDataCat.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => formatXAF(value)} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div style={{ width: "100%", height: 220 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieDataCat}
+                      dataKey="value"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={75}
+                      paddingAngle={2}
+                      label={CustomPieLabel}
+                      labelLine={false}
+                    >
+                      {pieDataCat.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => formatXAF(value)} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           )}
 
@@ -489,26 +493,28 @@ ${activeCreances.length > 0 ? `<h2>Créances en Cours (à recevoir)</h2>
           {pieDataPM.length > 0 && (
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
               <h2 className="text-sm font-bold font-display">Moyens de Paiement</h2>
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie
-                    data={pieDataPM}
-                    dataKey="value"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={75}
-                    paddingAngle={2}
-                    label={CustomPieLabel}
-                    labelLine={false}
-                  >
-                    {pieDataPM.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => formatXAF(value)} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div style={{ width: "100%", height: 220 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieDataPM}
+                      dataKey="value"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={75}
+                      paddingAngle={2}
+                      label={CustomPieLabel}
+                      labelLine={false}
+                    >
+                      {pieDataPM.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => formatXAF(value)} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           )}
         </div>
