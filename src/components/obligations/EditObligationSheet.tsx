@@ -20,6 +20,7 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
   const [description, setDescription] = useState(ob.description || "");
   const [dueDate, setDueDate] = useState(ob.due_date || "");
   const [confidence, setConfidence] = useState<ObligationConfidence>(ob.confidence);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const updateOb = useUpdateObligation();
 
   useEffect(() => {
@@ -29,15 +30,29 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
       setDescription(ob.description || "");
       setDueDate(ob.due_date || "");
       setConfidence(ob.confidence);
+      setErrors({});
     }
   }, [open, ob]);
 
-  const handleSave = async () => {
-    const numAmount = parseInt(amount);
-    if (!personName.trim() || !numAmount || numAmount <= 0) {
-      toast({ title: "Remplissez le nom et le montant", variant: "destructive" });
-      return;
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!personName.trim()) {
+      newErrors.personName = "Le nom est requis";
     }
+    const numAmount = Number(amount);
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+      newErrors.amount = "Montant invalide";
+    } else if (numAmount < ob.total_amount - ob.remaining_amount) {
+      newErrors.amount = `Le montant ne peut pas être inférieur aux paiements déjà effectués (${ob.total_amount - ob.remaining_amount} FCFA)`;
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+
+    const numAmount = Number(amount);
     try {
       await updateOb.mutateAsync({
         id: ob.id,
@@ -49,10 +64,10 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
         remaining_amount: ob.remaining_amount,
         original_total: ob.total_amount,
       });
-      toast({ title: "Modification enregistrée" });
+      toast({ title: "Modification enregistrée ✅" });
       onOpenChange(false);
     } catch {
-      toast({ title: "Erreur", variant: "destructive" });
+      toast({ title: "Erreur lors de la sauvegarde", variant: "destructive" });
     }
   };
 
@@ -69,7 +84,17 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
         <div className="space-y-4 mt-4">
           <div>
             <Label>Nom de la personne</Label>
-            <Input value={personName} onChange={(e) => setPersonName(e.target.value)} />
+            <Input
+              value={personName}
+              onChange={(e) => {
+                setPersonName(e.target.value);
+                if (errors.personName) setErrors(prev => ({ ...prev, personName: "" }));
+              }}
+              className={cn(errors.personName && "border-destructive focus-visible:ring-destructive")}
+            />
+            {errors.personName && (
+              <p className="text-xs text-destructive mt-1">{errors.personName}</p>
+            )}
           </div>
 
           <div>
@@ -78,8 +103,15 @@ const EditObligationSheet = ({ open, onOpenChange, obligation: ob }: Props) => {
               type="number"
               inputMode="numeric"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                if (errors.amount) setErrors(prev => ({ ...prev, amount: "" }));
+              }}
+              className={cn(errors.amount && "border-destructive focus-visible:ring-destructive")}
             />
+            {errors.amount && (
+              <p className="text-xs text-destructive mt-1">{errors.amount}</p>
+            )}
           </div>
 
           <div>
