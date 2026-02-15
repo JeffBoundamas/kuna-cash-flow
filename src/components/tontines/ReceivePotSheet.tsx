@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useReceivePot } from "@/hooks/use-tontines";
+import { useCreateNotification } from "@/hooks/use-notifications";
 import { formatXAF } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ const ReceivePotSheet = ({ open, onOpenChange, tontineId, tontineName, potAmount
   const { data: accounts = [] } = useAccounts();
   const [accountId, setAccountId] = useState("");
   const receivePot = useReceivePot();
+  const createNotification = useCreateNotification();
 
   const handleSubmit = () => {
     if (!accountId) {
@@ -40,7 +42,14 @@ const ReceivePotSheet = ({ open, onOpenChange, tontineId, tontineName, potAmount
       },
       {
         onSuccess: () => {
-          toast.success("🎉 Pot reçu ! Félicitations !");
+          const msg = `Félicitations ! Vous avez reçu le pot de ${formatXAF(potAmount)} !`;
+          toast.success(`🎉 ${msg}`);
+          createNotification.mutate({
+            type: "pot_received",
+            title: "Pot reçu !",
+            body: msg,
+            related_tontine_id: tontineId,
+          });
           onOpenChange(false);
           onPotReceived?.();
         },

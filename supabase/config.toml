@@ -1,1 +1,4 @@
 project_id = "fdcjxbwktkuhbwxgziyn"
+
+[functions.tontine-notifications]
+verify_jwt = false

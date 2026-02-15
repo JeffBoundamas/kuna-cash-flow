@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import BottomNav from "./BottomNav";
 import QuickAddModal from "@/components/transactions/QuickAddModal";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import { useAppBootstrap } from "@/hooks/use-app-bootstrap";
 import { useOfflineQueue } from "@/hooks/use-offline-queue";
 
@@ -22,6 +23,10 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top notification bar */}
+      <div className="sticky top-0 z-30 flex justify-end px-4 py-2 bg-background/80 backdrop-blur-sm mx-auto max-w-lg">
+        <NotificationBell />
+      </div>
       <main className="mx-auto max-w-lg pb-24">{children}</main>
 
       {/* Global FAB */}
