@@ -383,6 +383,33 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          category: Database["public"]["Enums"]["account_type"]
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["account_type"]
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["account_type"]
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
