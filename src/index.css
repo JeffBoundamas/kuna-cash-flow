@@ -115,6 +115,15 @@
   html, body {
     width: 100%;
     max-width: 100vw;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    -ms-touch-action: pan-y;
+  }
+
+  /* Prevent pinch-zoom on iOS */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
