@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, HandCoins, Gift, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useTontine, useTontineMembers, useTontinePayments, useDeleteTontine } f
 import TontineTimeline from "@/components/tontines/TontineTimeline";
 import LogContributionSheet from "@/components/tontines/LogContributionSheet";
 import ReceivePotSheet from "@/components/tontines/ReceivePotSheet";
+import TontineCelebration from "@/components/tontines/TontineCelebration";
 import { formatXAF } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -21,6 +22,9 @@ const TontineDetailPage = () => {
 
   const [showContribution, setShowContribution] = useState(false);
   const [showReceivePot, setShowReceivePot] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  const handleCelebrationDone = useCallback(() => setShowCelebration(false), []);
 
   const isLoading = loadingTontine || loadingMembers;
 
@@ -178,8 +182,15 @@ const TontineDetailPage = () => {
           potAmount={potAmount}
           currentCycle={tontine.current_cycle}
           memberId={myMember.id}
+          onPotReceived={() => setShowCelebration(true)}
         />
       )}
+
+      <TontineCelebration
+        show={showCelebration}
+        onDone={handleCelebrationDone}
+        potAmount={formatXAF(potAmount)}
+      />
     </div>
   );
 };

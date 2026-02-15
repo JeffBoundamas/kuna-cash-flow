@@ -16,9 +16,10 @@ interface Props {
   potAmount: number;
   currentCycle: number;
   memberId: string;
+  onPotReceived?: () => void;
 }
 
-const ReceivePotSheet = ({ open, onOpenChange, tontineId, tontineName, potAmount, currentCycle, memberId }: Props) => {
+const ReceivePotSheet = ({ open, onOpenChange, tontineId, tontineName, potAmount, currentCycle, memberId, onPotReceived }: Props) => {
   const { data: accounts = [] } = useAccounts();
   const [accountId, setAccountId] = useState("");
   const receivePot = useReceivePot();
@@ -41,6 +42,7 @@ const ReceivePotSheet = ({ open, onOpenChange, tontineId, tontineName, potAmount
         onSuccess: () => {
           toast.success("🎉 Pot reçu ! Félicitations !");
           onOpenChange(false);
+          onPotReceived?.();
         },
         onError: () => toast.error("Erreur"),
       }
