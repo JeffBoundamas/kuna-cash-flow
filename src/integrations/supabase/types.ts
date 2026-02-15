@@ -393,6 +393,7 @@ export type Database = {
           id: string
           initial_balance: number
           is_active: boolean
+          method_type: Database["public"]["Enums"]["payment_method_type"]
           name: string
           sort_order: number
           updated_at: string
@@ -407,6 +408,7 @@ export type Database = {
           id?: string
           initial_balance?: number
           is_active?: boolean
+          method_type?: Database["public"]["Enums"]["payment_method_type"]
           name: string
           sort_order?: number
           updated_at?: string
@@ -421,6 +423,7 @@ export type Database = {
           id?: string
           initial_balance?: number
           is_active?: boolean
+          method_type?: Database["public"]["Enums"]["payment_method_type"]
           name?: string
           sort_order?: number
           updated_at?: string
@@ -726,6 +729,12 @@ export type Database = {
       obligation_confidence: "certain" | "probable" | "uncertain"
       obligation_status: "active" | "partially_paid" | "settled" | "cancelled"
       obligation_type: "creance" | "engagement"
+      payment_method_type:
+        | "cash"
+        | "bank_account"
+        | "mobile_money"
+        | "credit_card"
+        | "check"
       tontine_frequency: "weekly" | "monthly"
       tontine_payment_type: "contribution" | "pot_received"
       tontine_status: "active" | "completed"
@@ -863,6 +872,13 @@ export const Constants = {
       obligation_confidence: ["certain", "probable", "uncertain"],
       obligation_status: ["active", "partially_paid", "settled", "cancelled"],
       obligation_type: ["creance", "engagement"],
+      payment_method_type: [
+        "cash",
+        "bank_account",
+        "mobile_money",
+        "credit_card",
+        "check",
+      ],
       tontine_frequency: ["weekly", "monthly"],
       tontine_payment_type: ["contribution", "pot_received"],
       tontine_status: ["active", "completed"],
