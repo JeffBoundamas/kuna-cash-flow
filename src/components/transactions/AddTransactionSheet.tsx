@@ -28,6 +28,7 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
   const [accountId, setAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [note, setNote] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState<RecurringFrequency>("monthly");
 
@@ -66,6 +67,7 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
         category_id: categoryId,
         amount: finalAmount,
         label: label || "Transaction",
+        date: date,
         sms_reference: note || undefined,
       });
 
@@ -87,6 +89,7 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
       setLabel("");
       setCategoryId("");
       setNote("");
+      setDate(new Date().toISOString().slice(0, 10));
       setIsRecurring(false);
       setFrequency("monthly");
       onOpenChange(false);
@@ -153,6 +156,19 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
               placeholder="Ex: Marché du samedi"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              Date
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
