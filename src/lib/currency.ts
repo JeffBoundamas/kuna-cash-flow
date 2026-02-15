@@ -6,17 +6,17 @@ export const formatXAF = (amount: number): string => {
   const formatted = Math.round(amount)
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-  return `${formatted} XAF`;
+  return `${formatted} FCFA`;
 };
 
 export const formatXAFShort = (amount: number): string => {
   if (amount >= 1_000_000) {
-    return `${(amount / 1_000_000).toFixed(1).replace(".0", "")}M XAF`;
+    return `${(amount / 1_000_000).toFixed(1).replace(".0", "")}M FCFA`;
   }
   if (amount >= 1_000) {
-    return `${(amount / 1_000).toFixed(0)}K XAF`;
+    return `${(amount / 1_000).toFixed(0)}K FCFA`;
   }
-  return `${amount} XAF`;
+  return `${amount} FCFA`;
 };
 
 export const parseAmount = (value: string): number => {
