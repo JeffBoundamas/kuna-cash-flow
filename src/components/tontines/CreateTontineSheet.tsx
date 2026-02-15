@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useId } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,24 @@ import { Plus, X, GripVertical } from "lucide-react";
 import { useCreateTontine } from "@/hooks/use-tontines";
 import { formatXAF, parseAmount } from "@/lib/currency";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Props {
   open: boolean;
@@ -16,27 +34,99 @@ interface Props {
 }
 
 interface MemberInput {
+  id: string;
   name: string;
   is_current_user: boolean;
 }
 
+let nextMemberId = 1;
+const createMember = (is_current_user = false): MemberInput => ({
+  id: `member-${nextMemberId++}`,
+  name: "",
+  is_current_user,
+});
+
+/* ── Sortable member row ── */
+const SortableMemberRow = ({
+  member,
+  index,
+  canRemove,
+  onUpdate,
+  onRemove,
+}: {
+  member: MemberInput;
+  index: number;
+  canRemove: boolean;
+  onUpdate: (field: keyof MemberInput, value: string | boolean) => void;
+  onRemove: () => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: member.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : "auto" as any,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2">
+      <button
+        type="button"
+        className="touch-none cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground flex-shrink-0"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <span className="text-xs text-muted-foreground w-5 flex-shrink-0">#{index + 1}</span>
+      <Input
+        placeholder={`Membre ${index + 1}`}
+        value={member.name}
+        onChange={(e) => onUpdate("name", e.target.value)}
+        className="h-9 text-sm"
+      />
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Switch
+          checked={member.is_current_user}
+          onCheckedChange={(v) => onUpdate("is_current_user", v)}
+          className="scale-75"
+        />
+        <span className="text-[10px] text-muted-foreground">Moi</span>
+      </div>
+      {canRemove && (
+        <button type="button" onClick={onRemove} className="text-muted-foreground hover:text-destructive flex-shrink-0">
+          <X className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+};
+
+/* ── Main sheet ── */
 const CreateTontineSheet = ({ open, onOpenChange }: Props) => {
   const [name, setName] = useState("");
   const [amountStr, setAmountStr] = useState("");
   const [frequency, setFrequency] = useState<"weekly" | "monthly">("monthly");
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [members, setMembers] = useState<MemberInput[]>([
-    { name: "", is_current_user: true },
-    { name: "", is_current_user: false },
+    createMember(true),
+    createMember(),
   ]);
 
   const createTontine = useCreateTontine();
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   const potAmount = parseAmount(amountStr) * members.length;
 
-  const addMember = () => {
-    setMembers([...members, { name: "", is_current_user: false }]);
-  };
+  const addMember = () => setMembers([...members, createMember()]);
 
   const removeMember = (idx: number) => {
     if (members.length <= 2) return;
@@ -50,6 +140,17 @@ const CreateTontineSheet = ({ open, onOpenChange }: Props) => {
     }
     (updated[idx] as any)[field] = value;
     setMembers(updated);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setMembers((prev) => {
+        const oldIndex = prev.findIndex((m) => m.id === active.id);
+        const newIndex = prev.findIndex((m) => m.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
   };
 
   const handleSubmit = () => {
@@ -78,15 +179,15 @@ const CreateTontineSheet = ({ open, onOpenChange }: Props) => {
           onOpenChange(false);
           setName("");
           setAmountStr("");
-          setMembers([
-            { name: "", is_current_user: true },
-            { name: "", is_current_user: false },
-          ]);
+          setMembers([createMember(true), createMember()]);
         },
         onError: () => toast.error("Erreur lors de la création"),
       }
     );
   };
+
+  // Find current user's position
+  const myIndex = members.findIndex((m) => m.is_current_user);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -129,6 +230,12 @@ const CreateTontineSheet = ({ open, onOpenChange }: Props) => {
             </div>
           )}
 
+          {myIndex >= 0 && potAmount > 0 && (
+            <div className="rounded-xl bg-muted/50 p-3 text-center">
+              <p className="text-xs text-muted-foreground">Vous passez en position {myIndex + 1}</p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Membres ({members.length})</Label>
@@ -136,33 +243,23 @@ const CreateTontineSheet = ({ open, onOpenChange }: Props) => {
                 <Plus className="h-3.5 w-3.5 mr-1" /> Ajouter
               </Button>
             </div>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {members.map((m, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground w-5 flex-shrink-0">#{i + 1}</span>
-                  <Input
-                    placeholder={`Membre ${i + 1}`}
-                    value={m.name}
-                    onChange={(e) => updateMember(i, "name", e.target.value)}
-                    className="h-9 text-sm"
-                  />
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Switch
-                      checked={m.is_current_user}
-                      onCheckedChange={(v) => updateMember(i, "is_current_user", v)}
-                      className="scale-75"
+            <p className="text-[11px] text-muted-foreground">Glissez pour réorganiser l'ordre de passage</p>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={members.map((m) => m.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {members.map((m, i) => (
+                    <SortableMemberRow
+                      key={m.id}
+                      member={m}
+                      index={i}
+                      canRemove={members.length > 2}
+                      onUpdate={(field, value) => updateMember(i, field, value)}
+                      onRemove={() => removeMember(i)}
                     />
-                    <span className="text-[10px] text-muted-foreground">Moi</span>
-                  </div>
-                  {members.length > 2 && (
-                    <button onClick={() => removeMember(i)} className="text-muted-foreground hover:text-destructive">
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           </div>
 
           <Button className="w-full" onClick={handleSubmit} disabled={createTontine.isPending}>
