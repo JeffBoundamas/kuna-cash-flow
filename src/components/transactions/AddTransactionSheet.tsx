@@ -10,7 +10,9 @@ import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useAddTransaction, useAllTransactions } from "@/hooks/use-transactions";
 import { useCategorySuggestion } from "@/hooks/use-category-suggestion";
+import { useAddRecurringTransaction, type RecurringFrequency } from "@/hooks/use-recurring-transactions";
 import CategoryListPicker from "@/components/transactions/CategoryListPicker";
+import RecurringToggle from "@/components/transactions/RecurringToggle";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -26,11 +28,14 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
   const [accountId, setAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [note, setNote] = useState("");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState<RecurringFrequency>("monthly");
 
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
   const { data: allTransactions = [] } = useAllTransactions();
   const addTransaction = useAddTransaction();
+  const addRecurring = useAddRecurringTransaction();
 
   const filteredCategories = categories.filter((c) =>
     type === "income" ? c.type === "Income" : c.type === "Expense"
@@ -63,6 +68,17 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
         label: label || "Transaction",
         sms_reference: note || undefined,
       });
+
+      if (isRecurring) {
+        await addRecurring.mutateAsync({
+          account_id: selectedAccount,
+          category_id: categoryId,
+          amount: finalAmount,
+          label: label || "Transaction",
+          frequency,
+        });
+      }
+
       toast({
         title: "Transaction ajoutée ✓",
         description: `${label || "Transaction"} — ${amount} XAF`,
@@ -71,6 +87,8 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
       setLabel("");
       setCategoryId("");
       setNote("");
+      setIsRecurring(false);
+      setFrequency("monthly");
       onOpenChange(false);
     } catch {
       toast({ title: "Erreur lors de l'ajout", variant: "destructive" });
@@ -192,6 +210,14 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
               className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             />
           </div>
+
+          {/* Recurring */}
+          <RecurringToggle
+            enabled={isRecurring}
+            onToggle={setIsRecurring}
+            frequency={frequency}
+            onFrequencyChange={setFrequency}
+          />
 
           <Button
             onClick={handleSubmit}

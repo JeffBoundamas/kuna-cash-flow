@@ -2,6 +2,7 @@ import { ReactNode, useState } from "react";
 import { Plus } from "lucide-react";
 import BottomNav from "./BottomNav";
 import QuickAddModal from "@/components/transactions/QuickAddModal";
+import { useAppBootstrap } from "@/hooks/use-app-bootstrap";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -9,6 +10,7 @@ interface AppLayoutProps {
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  useAppBootstrap();
 
   return (
     <div className="min-h-screen bg-background">

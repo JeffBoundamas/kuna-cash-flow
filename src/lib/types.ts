@@ -61,3 +61,17 @@ export interface Goal {
   created_at: string;
   updated_at: string;
 }
+
+export interface RecurringTransaction {
+  id: string;
+  user_id: string;
+  account_id: string;
+  category_id: string;
+  amount: number;
+  label: string;
+  frequency: "daily" | "weekly" | "monthly";
+  next_due_date: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
