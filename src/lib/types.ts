@@ -35,6 +35,7 @@ export interface Transaction {
   status: TransactionStatus;
   date: string;
   sms_reference: string | null;
+  payment_method_id: string | null;
   created_at: string;
   updated_at: string;
 }

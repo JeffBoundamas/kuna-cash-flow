@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLogObligationPayment } from "@/hooks/use-obligations";
-import { useAccounts } from "@/hooks/use-accounts";
+import { useActivePaymentMethodsWithBalance, checkBalanceSufficiency } from "@/hooks/use-payment-methods-with-balance";
+import PaymentMethodPicker from "@/components/payment-methods/PaymentMethodPicker";
 import { toast } from "@/hooks/use-toast";
 import { formatXAF } from "@/lib/currency";
 import type { Obligation } from "@/lib/obligation-types";
@@ -19,34 +20,48 @@ interface Props {
 const LogObligationPaymentSheet = ({ open, onOpenChange, obligation, onSettled }: Props) => {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [accountId, setAccountId] = useState("");
+  const [pmId, setPmId] = useState("");
   const [notes, setNotes] = useState("");
-  const { data: accounts = [] } = useAccounts();
+  const { data: paymentMethods = [] } = useActivePaymentMethodsWithBalance();
   const logPayment = useLogObligationPayment();
 
   const handleOpen = (v: boolean) => {
     if (v && obligation) {
       setAmount(String(obligation.remaining_amount));
       setDate(new Date().toISOString().slice(0, 10));
-      setAccountId(accounts[0]?.id || "");
+      setPmId(paymentMethods[0]?.id || "");
       setNotes("");
     }
     onOpenChange(v);
   };
 
   const handleSave = async () => {
-    if (!obligation || !accountId) return;
+    const selectedPM = pmId || paymentMethods[0]?.id;
+    if (!obligation || !selectedPM) return;
     const numAmount = parseInt(amount);
     if (!numAmount || numAmount <= 0 || numAmount > obligation.remaining_amount) {
       toast({ title: "Montant invalide", variant: "destructive" });
       return;
     }
+
+    // Balance validation for engagement (outgoing) payments
+    if (obligation.type === "engagement") {
+      const pm = paymentMethods.find((p) => p.id === selectedPM);
+      if (pm) {
+        const err = checkBalanceSufficiency(pm, -numAmount);
+        if (err) {
+          toast({ title: "Solde insuffisant", description: err, variant: "destructive" });
+          return;
+        }
+      }
+    }
+
     try {
       const result = await logPayment.mutateAsync({
         obligation,
         amount: numAmount,
         payment_date: date,
-        account_id: accountId,
+        account_id: selectedPM,
         notes: notes.trim() || undefined,
       });
       toast({
@@ -74,12 +89,7 @@ const LogObligationPaymentSheet = ({ open, onOpenChange, obligation, onSettled }
 
           <div>
             <Label>Montant (FCFA)</Label>
-            <Input
-              type="number"
-              inputMode="numeric"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
+            <Input type="number" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </div>
 
           <div>
@@ -87,19 +97,12 @@ const LogObligationPaymentSheet = ({ open, onOpenChange, obligation, onSettled }
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
 
-          <div>
-            <Label>Compte utilisé</Label>
-            <select
-              value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm"
-            >
-              <option value="">Sélectionner...</option>
-              {accounts.map(a => (
-                <option key={a.id} value={a.id}>{a.name}</option>
-              ))}
-            </select>
-          </div>
+          <PaymentMethodPicker
+            methods={paymentMethods}
+            selectedId={pmId || paymentMethods[0]?.id || ""}
+            onSelect={setPmId}
+            label="Compte utilisé"
+          />
 
           <div>
             <Label>Notes (optionnel)</Label>

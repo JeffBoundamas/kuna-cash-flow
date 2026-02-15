@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
+  Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useUpdateTransaction } from "@/hooks/use-transactions";
+import { useActivePaymentMethodsWithBalance, checkBalanceSufficiency } from "@/hooks/use-payment-methods-with-balance";
+import PaymentMethodPicker from "@/components/payment-methods/PaymentMethodPicker";
 import CategoryListPicker from "@/components/transactions/CategoryListPicker";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -24,12 +22,12 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
   const [type, setType] = useState<"expense" | "income">("expense");
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
-  const [accountId, setAccountId] = useState("");
+  const [pmId, setPmId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");
 
-  const { data: accounts = [] } = useAccounts();
+  const { data: paymentMethods = [] } = useActivePaymentMethodsWithBalance();
   const { data: categories = [] } = useCategories();
   const updateTransaction = useUpdateTransaction();
 
@@ -38,7 +36,7 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
       setType(transaction.amount > 0 ? "income" : "expense");
       setAmount(String(Math.abs(transaction.amount)));
       setLabel(transaction.label);
-      setAccountId(transaction.account_id);
+      setPmId(transaction.payment_method_id || transaction.account_id);
       setCategoryId(transaction.category_id);
       setDate(transaction.date);
       setNote(transaction.sms_reference || "");
@@ -50,7 +48,7 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
   );
 
   const handleSubmit = async () => {
-    if (!transaction || !amount || !categoryId || !accountId) {
+    if (!transaction || !amount || !categoryId || !pmId) {
       toast({ title: "Veuillez remplir tous les champs obligatoires", variant: "destructive" });
       return;
     }
@@ -58,17 +56,30 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
     const numAmount = parseInt(amount);
     const finalAmount = type === "expense" ? -Math.abs(numAmount) : Math.abs(numAmount);
 
+    // Balance validation for expenses
+    const pm = paymentMethods.find((p) => p.id === pmId);
+    if (pm && finalAmount < 0) {
+      // Add back the old transaction amount before checking
+      const adjustedPm = { ...pm, currentBalance: pm.currentBalance - (transaction.amount) };
+      const err = checkBalanceSufficiency(adjustedPm, finalAmount);
+      if (err) {
+        toast({ title: "Solde insuffisant", description: err, variant: "destructive" });
+        return;
+      }
+    }
+
     try {
       await updateTransaction.mutateAsync({
         id: transaction.id,
         oldAmount: transaction.amount,
         oldAccountId: transaction.account_id,
-        account_id: accountId,
+        account_id: pmId,
         category_id: categoryId,
         amount: finalAmount,
         label: label || "Transaction",
         date,
         sms_reference: note || null,
+        payment_method_id: pmId,
       });
       toast({ title: "Transaction modifiée ✓" });
       onOpenChange(false);
@@ -87,7 +98,6 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
         </SheetHeader>
 
         <div className="space-y-4 pb-6">
-          {/* Type toggle */}
           <div className="flex rounded-xl bg-muted p-1 gap-1">
             <button
               onClick={() => { setType("expense"); setCategoryId(""); }}
@@ -109,7 +119,6 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
             </button>
           </div>
 
-          {/* Amount */}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Montant (XAF) *</label>
             <input
@@ -120,76 +129,33 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
             />
           </div>
 
-          {/* Label */}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Libellé</label>
-            <input
-              type="text"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+            <input type="text" value={label} onChange={(e) => setLabel(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
 
-          {/* Date */}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
 
-          {/* Account */}
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Compte</label>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {accounts.map((acc) => (
-                <button
-                  key={acc.id}
-                  onClick={() => setAccountId(acc.id)}
-                  className={cn(
-                    "rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0",
-                    accountId === acc.id
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground"
-                  )}
-                >
-                  {acc.name}
-                </button>
-              ))}
-            </div>
-          </div>
+          <PaymentMethodPicker methods={paymentMethods} selectedId={pmId} onSelect={setPmId} />
 
-          {/* Category - List format */}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Catégorie *</label>
-            <CategoryListPicker
-              categories={filteredCategories}
-              selectedId={categoryId}
-              onSelect={setCategoryId}
-            />
+            <CategoryListPicker categories={filteredCategories} selectedId={categoryId} onSelect={setCategoryId} />
           </div>
 
-          {/* Note */}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Note</label>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={2}
-              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-            />
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2}
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
           </div>
 
-          <Button
-            onClick={handleSubmit}
-            disabled={updateTransaction.isPending}
-            className="w-full rounded-xl py-6 text-base font-semibold"
-            size="lg"
-          >
+          <Button onClick={handleSubmit} disabled={updateTransaction.isPending}
+            className="w-full rounded-xl py-6 text-base font-semibold" size="lg">
             {updateTransaction.isPending ? "Modification..." : "Modifier"}
           </Button>
         </div>

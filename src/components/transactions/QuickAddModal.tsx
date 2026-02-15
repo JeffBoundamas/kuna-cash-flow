@@ -1,15 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useAddTransaction } from "@/hooks/use-transactions";
 import { useAddRecurringTransaction, type RecurringFrequency } from "@/hooks/use-recurring-transactions";
+import { useActivePaymentMethodsWithBalance, checkBalanceSufficiency } from "@/hooks/use-payment-methods-with-balance";
+import PaymentMethodPicker from "@/components/payment-methods/PaymentMethodPicker";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import CalculatorKeypad from "./CalculatorKeypad";
@@ -18,15 +16,15 @@ import RecurringToggle from "./RecurringToggle";
 
 const STORAGE_KEY = "quickadd_defaults";
 
-function getDefaults(): { categoryId: string; accountId: string; type: "expense" | "income" } {
+function getDefaults(): { categoryId: string; pmId: string; type: "expense" | "income" } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return { categoryId: "", accountId: "", type: "expense" };
+  return { categoryId: "", pmId: "", type: "expense" };
 }
 
-function saveDefaults(data: { categoryId: string; accountId: string; type: "expense" | "income" }) {
+function saveDefaults(data: { categoryId: string; pmId: string; type: "expense" | "income" }) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
@@ -40,13 +38,13 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
   const [type, setType] = useState<"expense" | "income">(defaults.type);
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
-  const [accountId, setAccountId] = useState(defaults.accountId);
+  const [pmId, setPmId] = useState(defaults.pmId);
   const [categoryId, setCategoryId] = useState(defaults.categoryId);
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState<RecurringFrequency>("monthly");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
 
-  const { data: accounts = [] } = useAccounts();
+  const { data: paymentMethods = [] } = useActivePaymentMethodsWithBalance();
   const { data: categories = [] } = useCategories();
   const addTransaction = useAddTransaction();
   const addRecurring = useAddRecurringTransaction();
@@ -56,12 +54,11 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
     [categories, type]
   );
 
-  // Reset defaults when opening
   useEffect(() => {
     if (open) {
       const d = getDefaults();
       setType(d.type);
-      setAccountId(d.accountId);
+      setPmId(d.pmId);
       setCategoryId(d.categoryId);
       setAmount("");
       setLabel("");
@@ -71,12 +68,12 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
     }
   }, [open]);
 
-  // Validate that stored defaults still exist
+  // Validate stored defaults
   useEffect(() => {
-    if (accountId && accounts.length > 0 && !accounts.find((a) => a.id === accountId)) {
-      setAccountId(accounts[0]?.id || "");
+    if (pmId && paymentMethods.length > 0 && !paymentMethods.find((p) => p.id === pmId)) {
+      setPmId(paymentMethods[0]?.id || "");
     }
-  }, [accounts, accountId]);
+  }, [paymentMethods, pmId]);
 
   useEffect(() => {
     if (categoryId && filteredCategories.length > 0 && !filteredCategories.find((c) => c.id === categoryId)) {
@@ -85,8 +82,8 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
   }, [filteredCategories, categoryId]);
 
   const handleSubmit = async () => {
-    const selectedAccount = accountId || accounts[0]?.id;
-    if (!amount || !categoryId || !selectedAccount) {
+    const selectedPM = pmId || paymentMethods[0]?.id;
+    if (!amount || !categoryId || !selectedPM) {
       toast({ title: "Remplissez montant, catégorie et compte", variant: "destructive" });
       return;
     }
@@ -94,19 +91,29 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
     const numAmount = parseInt(amount);
     const finalAmount = type === "expense" ? -Math.abs(numAmount) : Math.abs(numAmount);
 
+    // Balance validation
+    const pm = paymentMethods.find((p) => p.id === selectedPM);
+    if (pm && finalAmount < 0) {
+      const err = checkBalanceSufficiency(pm, finalAmount);
+      if (err) {
+        toast({ title: "Solde insuffisant", description: err, variant: "destructive" });
+        return;
+      }
+    }
+
     try {
       await addTransaction.mutateAsync({
-        account_id: selectedAccount,
+        account_id: selectedPM,
+        payment_method_id: selectedPM,
         category_id: categoryId,
         amount: finalAmount,
         label: label || "Transaction",
-        date: date,
+        date,
       });
 
-      // Also create recurring template if toggled
       if (isRecurring) {
         await addRecurring.mutateAsync({
-          account_id: selectedAccount,
+          account_id: selectedPM,
           category_id: categoryId,
           amount: finalAmount,
           label: label || "Transaction",
@@ -114,8 +121,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
         });
       }
 
-      // Save defaults for next time
-      saveDefaults({ categoryId, accountId: selectedAccount, type });
+      saveDefaults({ categoryId, pmId: selectedPM, type });
 
       toast({
         title: "Transaction ajoutée ✓",
@@ -156,10 +162,8 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
           </button>
         </div>
 
-        {/* Calculator */}
         <CalculatorKeypad value={amount} onChange={setAmount} />
 
-        {/* Label (optional, collapsible) */}
         <input
           type="text"
           placeholder="Libellé (optionnel)"
@@ -168,7 +172,6 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
 
-        {/* Date */}
         <input
           type="date"
           value={date}
@@ -176,34 +179,18 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
 
-        {/* Account chips */}
-        {accounts.length > 0 && (
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-            {accounts.map((acc) => (
-              <button
-                key={acc.id}
-                onClick={() => setAccountId(acc.id)}
-                className={cn(
-                  "rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0",
-                  (accountId || accounts[0]?.id) === acc.id
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground"
-                )}
-              >
-                {acc.name}
-              </button>
-            ))}
-          </div>
-        )}
+        <PaymentMethodPicker
+          methods={paymentMethods}
+          selectedId={pmId || paymentMethods[0]?.id || ""}
+          onSelect={setPmId}
+        />
 
-        {/* Category picker */}
         <CategoryListPicker
           categories={filteredCategories}
           selectedId={categoryId}
           onSelect={setCategoryId}
         />
 
-        {/* Recurring toggle */}
         <RecurringToggle
           enabled={isRecurring}
           onToggle={setIsRecurring}
