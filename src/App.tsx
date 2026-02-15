@@ -12,6 +12,7 @@ import Accounts from "@/pages/Accounts";
 import BudgetPage from "@/pages/Budget";
 import GoalsPage from "@/pages/Goals";
 import Settings from "@/pages/Settings";
+import Report from "@/pages/Report";
 import Categories from "@/pages/Categories";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -37,6 +38,7 @@ const App = () => (
                       <Route path="/transactions" element={<Transactions />} />
                       <Route path="/accounts" element={<Accounts />} />
                       <Route path="/budget" element={<BudgetPage />} />
+                      <Route path="/report" element={<Report />} />
                       <Route path="/goals" element={<GoalsPage />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/categories" element={<Categories />} />
