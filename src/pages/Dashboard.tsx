@@ -19,6 +19,7 @@ import SavingsRate from "@/components/dashboard/SavingsRate";
 import ExpensesByCategoryDonut from "@/components/dashboard/ExpensesByCategoryDonut";
 import IncomeExpenseChart from "@/components/dashboard/IncomeExpenseChart";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
+import TresorerieCard from "@/components/dashboard/TresorerieCard";
 
 const now = new Date();
 const currentMonth = now.getMonth() + 1;
@@ -95,6 +96,9 @@ const Dashboard = () => {
           <p>{now.toLocaleDateString("fr-FR", { month: "short" })} {currentYear}</p>
         </div>
       </div>
+
+      {/* Trésorerie réelle */}
+      <TresorerieCard totalBalance={totalBalance} />
 
       {/* Tontines Summary */}
       <TontineDashboardCard />
