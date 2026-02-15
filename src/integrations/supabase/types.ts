@@ -128,6 +128,7 @@ export type Database = {
           created_at: string
           goal_id: string
           id: string
+          payment_method_id: string | null
           user_id: string
         }
         Insert: {
@@ -136,6 +137,7 @@ export type Database = {
           created_at?: string
           goal_id: string
           id?: string
+          payment_method_id?: string | null
           user_id: string
         }
         Update: {
@@ -144,6 +146,7 @@ export type Database = {
           created_at?: string
           goal_id?: string
           id?: string
+          payment_method_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -159,6 +162,13 @@ export type Database = {
             columns: ["goal_id"]
             isOneToOne: false
             referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_contributions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
         ]
@@ -288,6 +298,7 @@ export type Database = {
           notes: string | null
           obligation_id: string
           payment_date: string
+          payment_method_id: string | null
           user_id: string
         }
         Insert: {
@@ -298,6 +309,7 @@ export type Database = {
           notes?: string | null
           obligation_id: string
           payment_date?: string
+          payment_method_id?: string | null
           user_id: string
         }
         Update: {
@@ -308,6 +320,7 @@ export type Database = {
           notes?: string | null
           obligation_id?: string
           payment_date?: string
+          payment_method_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -323,6 +336,13 @@ export type Database = {
             columns: ["obligation_id"]
             isOneToOne: false
             referencedRelation: "obligations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "obligation_payments_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
         ]
@@ -573,6 +593,7 @@ export type Database = {
           id: string
           linked_account_id: string | null
           payment_date: string
+          payment_method_id: string | null
           tontine_id: string
           type: Database["public"]["Enums"]["tontine_payment_type"]
           user_id: string
@@ -584,6 +605,7 @@ export type Database = {
           id?: string
           linked_account_id?: string | null
           payment_date?: string
+          payment_method_id?: string | null
           tontine_id: string
           type?: Database["public"]["Enums"]["tontine_payment_type"]
           user_id: string
@@ -595,6 +617,7 @@ export type Database = {
           id?: string
           linked_account_id?: string | null
           payment_date?: string
+          payment_method_id?: string | null
           tontine_id?: string
           type?: Database["public"]["Enums"]["tontine_payment_type"]
           user_id?: string
@@ -605,6 +628,13 @@ export type Database = {
             columns: ["linked_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tontine_payments_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
           {
@@ -667,6 +697,7 @@ export type Database = {
           date: string
           id: string
           label: string
+          payment_method_id: string | null
           sms_reference: string | null
           status: Database["public"]["Enums"]["transaction_status"]
           updated_at: string
@@ -680,6 +711,7 @@ export type Database = {
           date?: string
           id?: string
           label?: string
+          payment_method_id?: string | null
           sms_reference?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           updated_at?: string
@@ -693,6 +725,7 @@ export type Database = {
           date?: string
           id?: string
           label?: string
+          payment_method_id?: string | null
           sms_reference?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           updated_at?: string
@@ -711,6 +744,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
         ]

@@ -1,19 +1,17 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Calendar, Plus, Settings } from "lucide-react";
+import { Calendar, Plus, Settings } from "lucide-react";
+import { icons } from "lucide-react";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import TontineDashboardCard from "@/components/tontines/TontineDashboardCard";
-import { formatXAF } from "@/lib/currency";
-import { calculateResteAVivre } from "@/lib/currency";
-import { useAccounts } from "@/hooks/use-accounts";
+import { formatXAF, formatXAFShort, calculateResteAVivre } from "@/lib/currency";
+import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useCategories } from "@/hooks/use-categories";
 import { useMonthlySummary } from "@/hooks/use-monthly-summary";
 import { useMonthlySavings } from "@/hooks/use-monthly-savings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { formatXAFShort } from "@/lib/currency";
-import AddAccountSheet from "@/components/accounts/AddAccountSheet";
 import BalanceCard from "@/components/dashboard/BalanceCard";
 import SavingsRate from "@/components/dashboard/SavingsRate";
 import ExpensesByCategoryDonut from "@/components/dashboard/ExpensesByCategoryDonut";
@@ -27,15 +25,14 @@ const currentYear = now.getFullYear();
 
 const Dashboard = () => {
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("kuna_onboarding_done"));
-  const { data: accounts = [], isLoading: loadingAccounts } = useAccounts();
+  const { data: methods = [], isLoading: loadingPM } = usePaymentMethodsWithBalance();
   const { data: transactions = [], isLoading: loadingTx } = useTransactions(currentMonth, currentYear);
   const { data: categories = [] } = useCategories();
   const { data: monthlySummary = [] } = useMonthlySummary(6);
   const { data: monthlySavings = 0 } = useMonthlySavings();
-  const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const navigate = useNavigate();
 
-  const totalBalance = useMemo(() => accounts.reduce((sum, a) => sum + a.balance, 0), [accounts]);
+  const totalBalance = useMemo(() => methods.filter(m => m.is_active).reduce((sum, m) => sum + m.currentBalance, 0), [methods]);
   const monthlyIncome = useMemo(() => transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0), [transactions]);
   const monthlyExpenses = useMemo(() => transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0), [transactions]);
 
@@ -44,7 +41,7 @@ const Dashboard = () => {
     [monthlyIncome, monthlyExpenses]
   );
 
-  const isLoading = loadingAccounts || loadingTx;
+  const isLoading = loadingPM || loadingTx;
 
   if (showOnboarding) {
     return <OnboardingFlow onComplete={() => setShowOnboarding(false)} />;
@@ -106,29 +103,42 @@ const Dashboard = () => {
       {/* Savings Rate */}
       <SavingsRate monthlyIncome={monthlyIncome} monthlySavings={monthlySavings} />
 
-      {/* Accounts */}
+      {/* Accounts from payment methods */}
       <div className="animate-fade-in" style={{ animationDelay: "0.12s" }}>
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-sm font-semibold font-display text-muted-foreground">Mes Comptes</h2>
-          <Button size="sm" variant="ghost" onClick={() => setAccountSheetOpen(true)} className="h-7 w-7 p-0">
-            <Plus className="h-4 w-4" />
+          <Button size="sm" variant="ghost" onClick={() => navigate("/portfolio")} className="h-7 px-2 text-xs">
+            Voir tout
           </Button>
         </div>
-        {accounts.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Aucun compte ajouté. Appuyez sur + pour commencer.</p>
+        {methods.filter(m => m.is_active).length === 0 ? (
+          <p className="text-xs text-muted-foreground">Aucun moyen de paiement configuré.</p>
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
-            {accounts.map((acc) => (
-              <button
-                key={acc.id}
-                onClick={() => navigate("/accounts")}
-                className="min-w-[140px] rounded-xl border border-border bg-card p-3 flex-shrink-0 text-left hover:shadow-sm transition-shadow active:scale-[0.98]"
-              >
-                <p className="text-[11px] text-muted-foreground truncate">{acc.type}</p>
-                <p className="text-sm font-semibold truncate">{acc.name}</p>
-                <p className="text-sm font-bold font-display mt-1 text-primary">{formatXAFShort(acc.balance)}</p>
-              </button>
-            ))}
+            {methods.filter(m => m.is_active).sort((a, b) => a.sort_order - b.sort_order).map((pm) => {
+              const Icon = (icons as any)[pm.icon] || (icons as any)["Wallet"];
+              return (
+                <button
+                  key={pm.id}
+                  onClick={() => navigate("/portfolio")}
+                  className="min-w-[140px] rounded-xl border border-border bg-card p-3 flex-shrink-0 text-left hover:shadow-sm transition-shadow active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full" style={{ backgroundColor: pm.color + "20" }}>
+                      <Icon className="h-3 w-3" style={{ color: pm.color }} />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {pm.method_type === "cash" ? "Espèces" :
+                       pm.method_type === "bank_account" ? "Banque" :
+                       pm.method_type === "mobile_money" ? "Mobile" :
+                       pm.method_type === "credit_card" ? "Carte" : "Chèque"}
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold truncate">{pm.name}</p>
+                  <p className="text-sm font-bold font-display mt-1 text-primary">{formatXAFShort(pm.currentBalance)}</p>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -141,8 +151,6 @@ const Dashboard = () => {
 
       {/* Recent Transactions */}
       <RecentTransactions transactions={transactions} categories={categories} />
-
-      <AddAccountSheet open={accountSheetOpen} onOpenChange={setAccountSheetOpen} />
     </div>
   );
 };

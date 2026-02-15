@@ -3,8 +3,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAccounts } from "@/hooks/use-accounts";
+import { useActivePaymentMethodsWithBalance, checkBalanceSufficiency } from "@/hooks/use-payment-methods-with-balance";
+import PaymentMethodPicker from "@/components/payment-methods/PaymentMethodPicker";
 import { useAddFundsToGoal } from "@/hooks/use-goals";
 import { formatXAF } from "@/lib/currency";
 import { toast } from "sonner";
@@ -19,18 +19,30 @@ interface Props {
 
 const AddFundsSheet = ({ open, onOpenChange, goal, onGoalReached }: Props) => {
   const [amount, setAmount] = useState("");
-  const [accountId, setAccountId] = useState("");
-  const { data: accounts = [] } = useAccounts();
+  const [pmId, setPmId] = useState("");
+  const { data: paymentMethods = [] } = useActivePaymentMethodsWithBalance();
   const addFunds = useAddFundsToGoal();
 
   const handleSubmit = () => {
     const parsedAmount = parseInt(amount.replace(/\s/g, ""), 10);
-    if (!parsedAmount || parsedAmount <= 0 || !accountId || !goal) {
+    const selectedPM = pmId || paymentMethods[0]?.id;
+    if (!parsedAmount || parsedAmount <= 0 || !selectedPM || !goal) {
       toast.error("Veuillez remplir tous les champs");
       return;
     }
+
+    // Balance validation
+    const pm = paymentMethods.find((p) => p.id === selectedPM);
+    if (pm) {
+      const err = checkBalanceSufficiency(pm, -parsedAmount);
+      if (err) {
+        toast.error(err);
+        return;
+      }
+    }
+
     addFunds.mutate(
-      { goalId: goal.id, amount: parsedAmount, accountId },
+      { goalId: goal.id, amount: parsedAmount, accountId: selectedPM },
       {
         onSuccess: () => {
           toast.success(`${formatXAF(parsedAmount)} ajoutés à "${goal.name}"`);
@@ -39,7 +51,7 @@ const AddFundsSheet = ({ open, onOpenChange, goal, onGoalReached }: Props) => {
             onGoalReached();
           }
           setAmount("");
-          setAccountId("");
+          setPmId("");
           onOpenChange(false);
         },
         onError: (err: Error) => toast.error(err.message || "Erreur"),
@@ -66,29 +78,15 @@ const AddFundsSheet = ({ open, onOpenChange, goal, onGoalReached }: Props) => {
 
             <div>
               <Label>Montant (XAF)</Label>
-              <Input
-                type="number"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                placeholder="Ex: 25 000"
-              />
+              <Input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Ex: 25 000" />
             </div>
 
-            <div>
-              <Label>Depuis le compte</Label>
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choisir un compte" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map(acc => (
-                    <SelectItem key={acc.id} value={acc.id}>
-                      {acc.name} — {formatXAF(acc.balance)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <PaymentMethodPicker
+              methods={paymentMethods}
+              selectedId={pmId || paymentMethods[0]?.id || ""}
+              onSelect={setPmId}
+              label="Depuis le compte"
+            />
 
             <Button onClick={handleSubmit} className="w-full" disabled={addFunds.isPending}>
               {addFunds.isPending ? "En cours..." : "Ajouter les fonds"}

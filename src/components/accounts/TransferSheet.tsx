@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ArrowRightLeft } from "lucide-react";
-import { useAccounts } from "@/hooks/use-accounts";
+import { ArrowRightLeft, icons } from "lucide-react";
+import { useActivePaymentMethodsWithBalance, checkBalanceSufficiency } from "@/hooks/use-payment-methods-with-balance";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,7 +19,7 @@ interface TransferSheetProps {
 const TransferSheet = ({ open, onOpenChange }: TransferSheetProps) => {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const { data: accounts = [] } = useAccounts();
+  const { data: paymentMethods = [] } = useActivePaymentMethodsWithBalance();
   const [fromId, setFromId] = useState("");
   const [toId, setToId] = useState("");
   const [amount, setAmount] = useState("");
@@ -34,44 +34,64 @@ const TransferSheet = ({ open, onOpenChange }: TransferSheetProps) => {
     const numAmount = parseInt(amount);
     if (numAmount <= 0) return;
 
-    const fromAcc = accounts.find((a) => a.id === fromId);
-    const toAcc = accounts.find((a) => a.id === toId);
-    if (!fromAcc || !toAcc) return;
+    const fromPM = paymentMethods.find((p) => p.id === fromId);
+    if (!fromPM) return;
 
-    if (fromAcc.balance < numAmount) {
-      toast({ title: "Solde insuffisant", variant: "destructive" });
+    // Balance validation on source
+    const err = checkBalanceSufficiency(fromPM, -numAmount);
+    if (err) {
+      toast({ title: "Solde insuffisant", description: err, variant: "destructive" });
       return;
     }
 
     setLoading(true);
     try {
-      // Debit source
-      await supabase
-        .from("accounts")
-        .update({ balance: fromAcc.balance - numAmount })
-        .eq("id", fromId);
+      // Find or create transfer category
+      let { data: cat } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("name", "Transfert interne")
+        .maybeSingle();
 
-      // Credit destination
-      await supabase
-        .from("accounts")
-        .update({ balance: toAcc.balance + numAmount })
-        .eq("id", toId);
+      if (!cat) {
+        const { data: newCat } = await supabase
+          .from("categories")
+          .insert({ user_id: user.id, name: "Transfert interne", type: "Expense" as const, nature: "Essential" as const, color: "gray" })
+          .select("id")
+          .single();
+        cat = newCat;
+      }
 
-      qc.invalidateQueries({ queryKey: ["accounts"] });
+      if (cat) {
+        // Debit transaction
+        await supabase.from("transactions").insert({
+          user_id: user.id,
+          account_id: fromId,
+          payment_method_id: fromId,
+          category_id: cat.id,
+          amount: -numAmount,
+          label: `Transfert vers ${paymentMethods.find(p => p.id === toId)?.name || ""}`,
+        });
 
-      // Check threshold alert on source account after transfer
-      const newFromBalance = fromAcc.balance - numAmount;
-      if (fromAcc.balance_threshold != null && newFromBalance < fromAcc.balance_threshold) {
-        toast({
-          title: "⚠️ Solde bas",
-          description: `Le solde de ${fromAcc.name} (${formatXAF(newFromBalance)}) est passé sous le seuil de ${formatXAF(fromAcc.balance_threshold)}`,
-          variant: "destructive",
+        // Credit transaction
+        await supabase.from("transactions").insert({
+          user_id: user.id,
+          account_id: toId,
+          payment_method_id: toId,
+          category_id: cat.id,
+          amount: numAmount,
+          label: `Transfert depuis ${fromPM.name}`,
         });
       }
 
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["transactions-all"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
+
       toast({
         title: "Transfert effectué ✓",
-        description: `${formatXAF(numAmount)} de ${fromAcc.name} vers ${toAcc.name}`,
+        description: `${formatXAF(numAmount)} de ${fromPM.name} vers ${paymentMethods.find(p => p.id === toId)?.name || ""}`,
       });
       setAmount("");
       setFromId("");
@@ -84,6 +104,39 @@ const TransferSheet = ({ open, onOpenChange }: TransferSheetProps) => {
     }
   };
 
+  const renderChips = (selected: string, onSelect: (id: string) => void, exclude?: string, variant: "destructive" | "primary" = "primary") => (
+    <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
+      {paymentMethods
+        .filter((p) => !exclude || p.id !== exclude)
+        .map((pm) => {
+          const Icon = (icons as any)[pm.icon] || (icons as any)["Wallet"];
+          return (
+            <button
+              key={pm.id}
+              onClick={() => onSelect(pm.id)}
+              className={cn(
+                "rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 flex items-center gap-2",
+                selected === pm.id
+                  ? variant === "destructive"
+                    ? "border-destructive bg-destructive/10 text-destructive"
+                    : "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground"
+              )}
+            >
+              <div className="flex h-5 w-5 items-center justify-center rounded-full flex-shrink-0"
+                style={{ backgroundColor: pm.color + "20" }}>
+                <Icon className="h-3 w-3" style={{ color: pm.color }} />
+              </div>
+              <div className="text-left">
+                <span className="block leading-tight">{pm.name}</span>
+                <span className="block text-[10px] opacity-70">{formatXAF(pm.currentBalance)}</span>
+              </div>
+            </button>
+          );
+        })}
+    </div>
+  );
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
@@ -95,57 +148,16 @@ const TransferSheet = ({ open, onOpenChange }: TransferSheetProps) => {
         </SheetHeader>
 
         <div className="space-y-4 pb-6">
-          {/* From account */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-              Compte source
-            </label>
-            <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
-              {accounts.map((acc) => (
-                <button
-                  key={acc.id}
-                  onClick={() => setFromId(acc.id)}
-                  className={cn(
-                    "rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0",
-                    fromId === acc.id
-                      ? "border-destructive bg-destructive/10 text-destructive"
-                      : "border-border text-muted-foreground"
-                  )}
-                >
-                  {acc.name}
-                  <span className="block text-[10px] opacity-70">{formatXAF(acc.balance)}</span>
-                </button>
-              ))}
-            </div>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Compte source</label>
+            {renderChips(fromId, setFromId, undefined, "destructive")}
           </div>
 
-          {/* To account */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-              Compte destination
-            </label>
-            <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
-              {accounts
-                .filter((a) => a.id !== fromId)
-                .map((acc) => (
-                  <button
-                    key={acc.id}
-                    onClick={() => setToId(acc.id)}
-                    className={cn(
-                      "rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0",
-                      toId === acc.id
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground"
-                    )}
-                  >
-                    {acc.name}
-                    <span className="block text-[10px] opacity-70">{formatXAF(acc.balance)}</span>
-                  </button>
-                ))}
-            </div>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Compte destination</label>
+            {renderChips(toId, setToId, fromId)}
           </div>
 
-          {/* Amount */}
           <CalculatorKeypad value={amount} onChange={setAmount} />
 
           <Button

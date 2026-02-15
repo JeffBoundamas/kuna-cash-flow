@@ -9,7 +9,6 @@ export const useTransactions = (month?: number, year?: number) => {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  // Realtime subscription
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -20,6 +19,7 @@ export const useTransactions = (month?: number, year?: number) => {
         () => {
           qc.invalidateQueries({ queryKey: ["transactions"] });
           qc.invalidateQueries({ queryKey: ["accounts"] });
+          qc.invalidateQueries({ queryKey: ["payment_methods"] });
         }
       )
       .subscribe();
@@ -78,8 +78,8 @@ export const useAddTransaction = () => {
       status?: "Planned" | "Realized";
       date?: string;
       sms_reference?: string;
+      payment_method_id?: string;
     }) => {
-      // If offline, queue and return
       if (!navigator.onLine) {
         enqueueTransaction({
           user_id: user!.id,
@@ -95,27 +95,22 @@ export const useAddTransaction = () => {
 
       const { error } = await supabase.from("transactions").insert([{
         user_id: user!.id,
-        ...tx,
+        account_id: tx.account_id,
+        category_id: tx.category_id,
+        amount: tx.amount,
+        label: tx.label || "Transaction",
+        status: tx.status,
+        date: tx.date,
+        sms_reference: tx.sms_reference,
+        payment_method_id: tx.payment_method_id || tx.account_id,
       }]);
       if (error) throw error;
-
-      // Update account balance
-      const { data: account } = await supabase
-        .from("accounts")
-        .select("balance")
-        .eq("id", tx.account_id)
-        .maybeSingle();
-      if (account) {
-        await supabase
-          .from("accounts")
-          .update({ balance: account.balance + tx.amount })
-          .eq("id", tx.account_id);
-      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions-all"] });
       qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
     },
   });
 };
@@ -133,6 +128,7 @@ export const useUpdateTransaction = () => {
       label: string;
       date?: string;
       sms_reference?: string | null;
+      payment_method_id?: string;
     }) => {
       const { error } = await supabase
         .from("transactions")
@@ -143,29 +139,16 @@ export const useUpdateTransaction = () => {
           label: updates.label,
           date: updates.date,
           sms_reference: updates.sms_reference,
+          payment_method_id: updates.payment_method_id || updates.account_id,
         })
         .eq("id", id);
       if (error) throw error;
-
-      // Reverse old amount on old account
-      if (oldAccountId === updates.account_id) {
-        const diff = updates.amount - oldAmount;
-        if (diff !== 0) {
-          const { data: acc } = await supabase.from("accounts").select("balance").eq("id", oldAccountId).maybeSingle();
-          if (acc) await supabase.from("accounts").update({ balance: acc.balance + diff }).eq("id", oldAccountId);
-        }
-      } else {
-        // Different accounts
-        const { data: oldAcc } = await supabase.from("accounts").select("balance").eq("id", oldAccountId).maybeSingle();
-        if (oldAcc) await supabase.from("accounts").update({ balance: oldAcc.balance - oldAmount }).eq("id", oldAccountId);
-        const { data: newAcc } = await supabase.from("accounts").select("balance").eq("id", updates.account_id).maybeSingle();
-        if (newAcc) await supabase.from("accounts").update({ balance: newAcc.balance + updates.amount }).eq("id", updates.account_id);
-      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions-all"] });
       qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
     },
   });
 };
@@ -176,17 +159,12 @@ export const useDeleteTransaction = () => {
     mutationFn: async ({ id, amount, accountId }: { id: string; amount: number; accountId: string }) => {
       const { error } = await supabase.from("transactions").delete().eq("id", id);
       if (error) throw error;
-
-      // Reverse account balance
-      const { data: acc } = await supabase.from("accounts").select("balance").eq("id", accountId).maybeSingle();
-      if (acc) {
-        await supabase.from("accounts").update({ balance: acc.balance - amount }).eq("id", accountId);
-      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions-all"] });
       qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
     },
   });
 };

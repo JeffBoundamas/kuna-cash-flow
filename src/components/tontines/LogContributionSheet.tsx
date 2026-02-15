@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAccounts } from "@/hooks/use-accounts";
 import { useLogContribution } from "@/hooks/use-tontines";
 import { useCreateNotification } from "@/hooks/use-notifications";
+import { useActivePaymentMethodsWithBalance, checkBalanceSufficiency } from "@/hooks/use-payment-methods-with-balance";
+import PaymentMethodPicker from "@/components/payment-methods/PaymentMethodPicker";
 import { formatXAF } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -20,22 +19,34 @@ interface Props {
 }
 
 const LogContributionSheet = ({ open, onOpenChange, tontineId, tontineName, amount, currentCycle, totalMembers }: Props) => {
-  const { data: accounts = [] } = useAccounts();
-  const [accountId, setAccountId] = useState("");
+  const { data: paymentMethods = [] } = useActivePaymentMethodsWithBalance();
+  const [pmId, setPmId] = useState("");
   const logContribution = useLogContribution();
   const createNotification = useCreateNotification();
 
   const handleSubmit = () => {
-    if (!accountId) {
-      toast.error("Choisissez un compte");
+    const selectedPM = pmId || paymentMethods[0]?.id;
+    if (!selectedPM) {
+      toast.error("Choisissez un moyen de paiement");
       return;
     }
+
+    // Balance validation
+    const pm = paymentMethods.find((p) => p.id === selectedPM);
+    if (pm) {
+      const err = checkBalanceSufficiency(pm, -amount);
+      if (err) {
+        toast.error(err);
+        return;
+      }
+    }
+
     logContribution.mutate(
       {
         tontine_id: tontineId,
         amount,
         cycle_number: currentCycle,
-        linked_account_id: accountId,
+        linked_account_id: selectedPM,
         tontine_name: tontineName,
       },
       {
@@ -68,19 +79,12 @@ const LogContributionSheet = ({ open, onOpenChange, tontineId, tontineName, amou
             <p className="text-xs text-muted-foreground mt-1">Cycle {currentCycle} • {tontineName}</p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Depuis quel compte ?</Label>
-            <Select value={accountId} onValueChange={setAccountId}>
-              <SelectTrigger><SelectValue placeholder="Choisir un compte" /></SelectTrigger>
-              <SelectContent>
-                {accounts.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.name} ({formatXAF(a.balance)})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <PaymentMethodPicker
+            methods={paymentMethods}
+            selectedId={pmId || paymentMethods[0]?.id || ""}
+            onSelect={setPmId}
+            label="Depuis quel compte ?"
+          />
 
           <Button className="w-full" onClick={handleSubmit} disabled={logContribution.isPending}>
             Enregistrer la cotisation
