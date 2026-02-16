@@ -156,13 +156,13 @@ const Dashboard = () => {
         <BalanceCard totalBalance={totalBalance} monthlyIncome={monthlyIncome} monthlyExpenses={monthlyExpenses} />
 
         {/* Reste à vivre */}
-        <div className="rounded-xl bg-emerald-light p-4 flex items-center justify-between animate-fade-in" style={{ animationDelay: "0.05s" }}>
+        <div className={cn("rounded-xl p-4 flex items-center justify-between animate-fade-in", resteAVivre >= 0 ? "bg-emerald-light" : "bg-destructive/10")} style={{ animationDelay: "0.05s" }}>
           <div>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-dark font-medium mb-0.5">
+            <div className={cn("flex items-center gap-1.5 text-xs font-medium mb-0.5", resteAVivre >= 0 ? "text-emerald-dark" : "text-destructive")}>
               <Calendar className="h-3.5 w-3.5" />
               Reste à vivre / jour
             </div>
-            <p className="text-lg font-bold font-display text-foreground">{formatXAF(resteAVivre)}</p>
+            <p className={cn("text-lg font-bold font-display", resteAVivre >= 0 ? "text-foreground" : "text-destructive")}>{formatXAF(resteAVivre)}</p>
           </div>
           <div className="text-xs text-muted-foreground text-right">
             <p>{now.toLocaleDateString("fr-FR", { month: "short" })} {currentYear}</p>
