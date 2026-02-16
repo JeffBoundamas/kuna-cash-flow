@@ -1,22 +1,34 @@
 import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGenerateRecurring } from "@/hooks/use-recurring-transactions";
 import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
+import { useCategories } from "@/hooks/use-categories";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatXAF } from "@/lib/currency";
 
 const REMINDER_KEY = "daily_reminder_last";
+
+const REQUIRED_CATEGORIES = [
+  { name: "Mobile Money", type: "Expense" as const, nature: "Essential" as const, color: "amber" },
+  { name: "Divers", type: "Expense" as const, nature: "Desire" as const, color: "gray" },
+];
 
 /**
  * Hook that runs on mount to:
  * 1. Auto-generate due recurring transactions
  * 2. Show daily reminder toast at 8PM if not already shown today
  * 3. Check payment method balance thresholds
+ * 4. Seed missing default categories
  */
 export const useAppBootstrap = () => {
+  const queryClient = useQueryClient();
   const generateRecurring = useGenerateRecurring();
   const { data: methods } = usePaymentMethodsWithBalance();
+  const { data: categories } = useCategories();
   const hasRun = useRef(false);
   const thresholdChecked = useRef(false);
+  const categoriesSeeded = useRef(false);
 
   useEffect(() => {
     if (hasRun.current) return;
@@ -57,4 +69,31 @@ export const useAppBootstrap = () => {
       }
     }
   }, [methods]);
+
+  // 4. Seed missing default categories
+  useEffect(() => {
+    if (!categories || categoriesSeeded.current) return;
+    categoriesSeeded.current = true;
+
+    const seedMissing = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const missing = REQUIRED_CATEGORIES.filter(
+        (req) => !categories.some((c) => c.name.toLowerCase() === req.name.toLowerCase() && c.type === req.type)
+      );
+
+      if (missing.length === 0) return;
+
+      const { error } = await supabase.from("categories").insert(
+        missing.map((m) => ({ user_id: user.id, name: m.name, type: m.type, nature: m.nature, color: m.color }))
+      );
+
+      if (!error) {
+        queryClient.invalidateQueries({ queryKey: ["categories"] });
+      }
+    };
+
+    seedMissing();
+  }, [categories]);
 };
