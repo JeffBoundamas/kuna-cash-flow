@@ -74,13 +74,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Top notification bar */}
-      <div className="sticky top-0 z-30 flex justify-end px-4 py-2 bg-background/80 backdrop-blur-sm mx-auto max-w-lg">
+      <div className="sticky top-0 z-30 flex justify-end px-4 py-2 bg-background/80 backdrop-blur-sm mx-auto max-w-lg md:max-w-2xl lg:max-w-4xl">
         <NotificationBell />
       </div>
 
       <main
         ref={scrollRef}
-        className="mx-auto max-w-lg pb-24 overflow-y-auto overflow-x-hidden"
+        className="mx-auto max-w-lg md:max-w-2xl lg:max-w-4xl pb-24 overflow-y-auto overflow-x-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
