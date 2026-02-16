@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Plus, Settings, RefreshCw } from "lucide-react";
 import { icons } from "lucide-react";
@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import TontineDashboardCard from "@/components/tontines/TontineDashboardCard";
 import { formatXAF, formatXAFShort, calculateResteAVivre } from "@/lib/currency";
+import { toast } from "sonner";
 import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useCategories } from "@/hooks/use-categories";
@@ -90,8 +91,21 @@ const Dashboard = () => {
     () => calculateResteAVivre(monthlyIncome, monthlyExpenses, now.getDate()),
     [monthlyIncome, monthlyExpenses]
   );
-
   const isLoading = loadingPM || loadingTx;
+
+  // Alert when reste à vivre is negative
+  useEffect(() => {
+    if (!isLoading && resteAVivre < 0) {
+      const key = `kuna_rav_alert_${currentMonth}_${currentYear}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        toast.error("Reste à vivre négatif", {
+          description: `Vos dépenses dépassent vos revenus ce mois-ci. Budget quotidien : ${formatXAF(resteAVivre)}`,
+          duration: 8000,
+        });
+      }
+    }
+  }, [isLoading, resteAVivre]);
 
   if (showOnboarding) {
     return <OnboardingFlow onComplete={() => setShowOnboarding(false)} />;
