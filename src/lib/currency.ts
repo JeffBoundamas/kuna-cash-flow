@@ -45,5 +45,5 @@ export const calculateResteAVivre = (
   const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
   const remainingDays = daysInMonth - dayOfMonth + 1;
   const remaining = monthlyIncome - totalExpenses;
-  return Math.max(0, Math.round(remaining / remainingDays));
+  return Math.round(remaining / remainingDays);
 };
