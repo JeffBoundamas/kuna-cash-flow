@@ -144,7 +144,7 @@ const TontinesTab = () => {
       ) : (
         <>
           {activeTontines.length > 0 && (
-            <div className="space-y-3">
+             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {activeTontines.map(t => (
                 <TontineListCard key={t.id} tontine={t} onTap={() => setSelected(t)} />
               ))}
@@ -156,7 +156,7 @@ const TontinesTab = () => {
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">
                 Terminées
               </p>
-              <div className="space-y-3 opacity-60">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 opacity-60">
                 {completedTontines.map(t => (
                   <TontineListCard key={t.id} tontine={t} onTap={() => setSelected(t)} />
                 ))}
@@ -169,7 +169,7 @@ const TontinesTab = () => {
       {/* FAB */}
       <button
         onClick={() => setShowCreate(true)}
-        className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gold text-gold-foreground shadow-lg transition-transform active:scale-90"
+        className="fixed bottom-24 right-5 lg:bottom-8 lg:right-8 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gold text-gold-foreground shadow-lg transition-transform active:scale-90"
       >
         <Plus className="h-6 w-6" />
       </button>

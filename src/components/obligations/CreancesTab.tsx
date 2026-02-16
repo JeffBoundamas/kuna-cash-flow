@@ -120,7 +120,7 @@ const CreancesTab = () => {
       ) : (
         <>
           {active.length > 0 && (
-            <div className="space-y-2">
+            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
               {active.map(o => (
                 <ObligationCard key={o.id} obligation={o} onTap={() => setSelected(o)} />
               ))}
@@ -132,7 +132,7 @@ const CreancesTab = () => {
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">
                 Historique
               </p>
-              <div className="space-y-2 opacity-60">
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 opacity-60">
                 {settled.map(o => (
                   <ObligationCard key={o.id} obligation={o} onTap={() => setSelected(o)} />
                 ))}
@@ -146,7 +146,7 @@ const CreancesTab = () => {
       <button
         onClick={() => setShowAdd(true)}
         className={cn(
-          "fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-90",
+          "fixed bottom-24 right-5 lg:bottom-8 lg:right-8 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-90",
           subTab === "creance" ? "bg-emerald-600 text-white" : "bg-destructive text-destructive-foreground"
         )}
       >
