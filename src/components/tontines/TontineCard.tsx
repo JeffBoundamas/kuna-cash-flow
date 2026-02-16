@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatXAF } from "@/lib/currency";
 import type { Tontine, TontineMember } from "@/lib/tontine-types";
-import { getNextContributionDate } from "@/lib/tontine-types";
 
 interface Props {
   tontine: Tontine;
@@ -23,10 +22,6 @@ const TontineCard = ({ tontine, members }: Props) => {
   const myMember = useMemo(() => members.find((m) => m.is_current_user), [members]);
   const isMyTurn = currentMember?.is_current_user;
   const potAmount = tontine.contribution_amount * tontine.total_members;
-  const nextContribDate = useMemo(
-    () => tontine.status === "active" ? getNextContributionDate(tontine.start_date, tontine.frequency, tontine.current_cycle) : null,
-    [tontine]
-  );
 
   return (
     <Card
@@ -56,12 +51,14 @@ const TontineCard = ({ tontine, members }: Props) => {
           <Users className="h-3.5 w-3.5" />
           <span>{tontine.total_members} membres</span>
         </div>
-        {nextContribDate && (
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>Prochaine : {nextContribDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          <Calendar className="h-3.5 w-3.5" />
+          <span>
+            {currentMember?.payout_date
+              ? new Date(currentMember.payout_date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
+              : "—"}
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">

@@ -95,7 +95,7 @@ const Accounts = () => {
   if (selectedPMId && selectedPM) {
     const Icon = (icons as any)[selectedPM.icon] || (icons as any)["Wallet"];
     return (
-      <div className="px-4 pt-6 space-y-4 pb-24" onTouchStart={e => e.stopPropagation()} onTouchEnd={e => e.stopPropagation()}>
+      <div className="px-4 pt-6 space-y-4 pb-24">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSelectedPMId(null)}
@@ -175,7 +175,7 @@ const Accounts = () => {
 
   // Main list
   return (
-    <div className="px-4 pt-6 space-y-4 pb-24" onTouchStart={e => e.stopPropagation()} onTouchEnd={e => e.stopPropagation()}>
+    <div className="px-4 pt-6 space-y-4 pb-24">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold font-display">Mes Comptes</h1>
         <div className="flex gap-2">

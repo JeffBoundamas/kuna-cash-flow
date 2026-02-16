@@ -16,7 +16,6 @@ import EditTontineSheet from "./EditTontineSheet";
 import ManageMembersSheet from "./ManageMembersSheet";
 import MemberInfoSheet from "./MemberInfoSheet";
 import type { Tontine, TontineMember } from "@/lib/tontine-types";
-import { getNextContributionDate } from "@/lib/tontine-types";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -70,11 +69,6 @@ const TontineDetailView = ({ tontine, onBack }: Props) => {
 
   const remainingCycles = tontine.total_members - myContributions.length;
 
-  const nextContribDate = useMemo(
-    () => tontine.status === "active" ? getNextContributionDate(tontine.start_date, tontine.frequency, tontine.current_cycle) : null,
-    [tontine]
-  );
-
   return (
     <div className="pb-28 space-y-5">
       {/* Header */}
@@ -86,11 +80,6 @@ const TontineDetailView = ({ tontine, onBack }: Props) => {
           <h1 className="text-lg font-bold font-display truncate">{tontine.name}</h1>
           <p className="text-xs text-muted-foreground">
             {tontine.frequency === "monthly" ? "Mensuelle" : "Hebdomadaire"} · Cycle {tontine.current_cycle}/{tontine.total_members}
-            {nextContribDate && (
-              <span className="block text-primary font-medium mt-0.5">
-                Prochaine cotisation : {nextContribDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
-              </span>
-            )}
           </p>
         </div>
         <Badge className={cn(
