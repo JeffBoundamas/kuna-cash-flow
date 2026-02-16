@@ -40,3 +40,17 @@ export interface TontinePayment {
   linked_account_id: string | null;
   created_at: string;
 }
+
+/** Calcule la prochaine date de cotisation */
+export function getNextContributionDate(startDate: string, frequency: TontineFrequency, currentCycle: number): Date {
+  const start = new Date(startDate);
+  if (frequency === "monthly") {
+    const next = new Date(start);
+    next.setMonth(next.getMonth() + currentCycle - 1);
+    return next;
+  }
+  // weekly
+  const next = new Date(start);
+  next.setDate(next.getDate() + (currentCycle - 1) * 7);
+  return next;
+}
