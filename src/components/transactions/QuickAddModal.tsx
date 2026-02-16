@@ -38,6 +38,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
   const [type, setType] = useState<"expense" | "income">(defaults.type);
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
+  const [note, setNote] = useState("");
   const [pmId, setPmId] = useState(defaults.pmId);
   const [categoryId, setCategoryId] = useState(defaults.categoryId);
   const [isRecurring, setIsRecurring] = useState(false);
@@ -62,6 +63,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
       setCategoryId(d.categoryId);
       setAmount("");
       setLabel("");
+      setNote("");
       setIsRecurring(false);
       setFrequency("monthly");
       setDate(new Date().toISOString().slice(0, 10));
@@ -109,6 +111,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
         amount: finalAmount,
         label: label || "Transaction",
         date,
+        sms_reference: note || undefined,
       });
 
       if (isRecurring) {
@@ -191,6 +194,14 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
           categories={filteredCategories}
           selectedId={categoryId}
           onSelect={setCategoryId}
+        />
+
+        <textarea
+          placeholder="Note (optionnel)"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={2}
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-ring resize-none"
         />
 
         <RecurringToggle
