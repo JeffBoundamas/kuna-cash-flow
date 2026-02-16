@@ -78,7 +78,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="px-4 pt-6 pb-4 space-y-5">
+    <div className="px-4 lg:px-6 pt-6 pb-4 space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -112,14 +112,17 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Trésorerie réelle */}
-        <TresorerieCard totalBalance={totalBalance} />
+        {/* Grid for desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Trésorerie réelle */}
+          <TresorerieCard totalBalance={totalBalance} />
 
-        {/* Tontines Summary */}
-        <TontineDashboardCard />
+          {/* Tontines Summary */}
+          <TontineDashboardCard />
 
-        {/* Savings Rate */}
-        <SavingsRate monthlyIncome={monthlyIncome} monthlySavings={monthlySavings} />
+          {/* Savings Rate */}
+          <SavingsRate monthlyIncome={monthlyIncome} monthlySavings={monthlySavings} />
+        </div>
 
         {/* Accounts from payment methods */}
         <div className="animate-fade-in" style={{ animationDelay: "0.12s" }}>
@@ -161,11 +164,14 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Expenses by Category Donut */}
-        <ExpensesByCategoryDonut transactions={transactions} categories={categories} />
+        {/* Charts grid for desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Expenses by Category Donut */}
+          <ExpensesByCategoryDonut transactions={transactions} categories={categories} />
 
-        {/* Income vs Expenses Bar Chart */}
-        <IncomeExpenseChart data={monthlySummary} />
+          {/* Income vs Expenses Bar Chart */}
+          <IncomeExpenseChart data={monthlySummary} />
+        </div>
 
         {/* Recent Transactions */}
       <RecentTransactions transactions={transactions} categories={categories} />
