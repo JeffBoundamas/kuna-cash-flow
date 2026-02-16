@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { formatXAF } from "@/lib/currency";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import type { Obligation } from "@/lib/obligation-types";
 
 interface Props {
@@ -44,6 +45,15 @@ const ObligationCard = ({ obligation: ob, onTap }: Props) => {
             <p className="text-xs text-muted-foreground truncate mt-0.5">{ob.description}</p>
           )}
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            {ob.linked_tontine_id && (
+              <Badge className="bg-amber-100 text-amber-700 border-0 text-[9px] h-4 px-1.5">Tontine</Badge>
+            )}
+            {ob.linked_fixed_charge_id && (
+              <Badge className="bg-blue-100 text-blue-700 border-0 text-[9px] h-4 px-1.5">Charge fixe</Badge>
+            )}
+            {ob.linked_savings_goal_id && (
+              <Badge className="bg-emerald-100 text-emerald-700 border-0 text-[9px] h-4 px-1.5">Épargne</Badge>
+            )}
             {ob.due_date && (
               <span className={cn("text-[11px]", getDueDateColor(ob.due_date))}>
                 Échéance : {new Date(ob.due_date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}

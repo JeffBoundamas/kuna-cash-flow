@@ -14,6 +14,8 @@ export interface Obligation {
   confidence: ObligationConfidence;
   status: ObligationStatus;
   linked_tontine_id: string | null;
+  linked_fixed_charge_id: string | null;
+  linked_savings_goal_id: string | null;
   created_at: string;
   updated_at: string;
 }

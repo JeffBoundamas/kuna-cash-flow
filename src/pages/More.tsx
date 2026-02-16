@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Target, Settings, Download, CreditCard, ChevronRight } from "lucide-react";
+import { Target, Settings, Download, CreditCard, CalendarClock, ChevronRight } from "lucide-react";
 
 const items = [
+  { to: "/fixed-charges", icon: CalendarClock, label: "Charges fixes" },
   { to: "/payment-methods", icon: CreditCard, label: "Moyens de paiement" },
   { to: "/goals", icon: Target, label: "Objectifs d'épargne" },
   { to: "/settings", icon: Settings, label: "Paramètres" },

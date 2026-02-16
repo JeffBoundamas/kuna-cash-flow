@@ -121,6 +121,78 @@ export type Database = {
         }
         Relationships: []
       }
+      fixed_charges: {
+        Row: {
+          amount: number
+          auto_generate_obligation: boolean
+          beneficiary: string
+          category_id: string | null
+          created_at: string
+          due_day: number
+          end_date: string | null
+          frequency: Database["public"]["Enums"]["fixed_charge_frequency"]
+          id: string
+          is_active: boolean
+          name: string
+          payment_method_id: string | null
+          reminder_days_before: number
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          auto_generate_obligation?: boolean
+          beneficiary?: string
+          category_id?: string | null
+          created_at?: string
+          due_day?: number
+          end_date?: string | null
+          frequency?: Database["public"]["Enums"]["fixed_charge_frequency"]
+          id?: string
+          is_active?: boolean
+          name: string
+          payment_method_id?: string | null
+          reminder_days_before?: number
+          start_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          auto_generate_obligation?: boolean
+          beneficiary?: string
+          category_id?: string | null
+          created_at?: string
+          due_day?: number
+          end_date?: string | null
+          frequency?: Database["public"]["Enums"]["fixed_charge_frequency"]
+          id?: string
+          is_active?: boolean
+          name?: string
+          payment_method_id?: string | null
+          reminder_days_before?: number
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixed_charges_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_charges_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goal_contributions: {
         Row: {
           account_id: string
@@ -175,42 +247,62 @@ export type Database = {
       }
       goals: {
         Row: {
+          auto_contribute: boolean
+          contribute_day: number
           created_at: string
           current_amount: number
           deadline: string
           icon: string
           id: string
           is_emergency_fund: boolean
+          monthly_contribution: number
           name: string
+          preferred_payment_method_id: string | null
           target_amount: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          auto_contribute?: boolean
+          contribute_day?: number
           created_at?: string
           current_amount?: number
           deadline: string
           icon?: string
           id?: string
           is_emergency_fund?: boolean
+          monthly_contribution?: number
           name: string
+          preferred_payment_method_id?: string | null
           target_amount?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          auto_contribute?: boolean
+          contribute_day?: number
           created_at?: string
           current_amount?: number
           deadline?: string
           icon?: string
           id?: string
           is_emergency_fund?: boolean
+          monthly_contribution?: number
           name?: string
+          preferred_payment_method_id?: string | null
           target_amount?: number
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "goals_preferred_payment_method_id_fkey"
+            columns: ["preferred_payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_preferences: {
         Row: {
@@ -354,6 +446,8 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          linked_fixed_charge_id: string | null
+          linked_savings_goal_id: string | null
           linked_tontine_id: string | null
           person_name: string
           remaining_amount: number
@@ -369,6 +463,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          linked_fixed_charge_id?: string | null
+          linked_savings_goal_id?: string | null
           linked_tontine_id?: string | null
           person_name: string
           remaining_amount: number
@@ -384,6 +480,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          linked_fixed_charge_id?: string | null
+          linked_savings_goal_id?: string | null
           linked_tontine_id?: string | null
           person_name?: string
           remaining_amount?: number
@@ -394,6 +492,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "obligations_linked_fixed_charge_id_fkey"
+            columns: ["linked_fixed_charge_id"]
+            isOneToOne: false
+            referencedRelation: "fixed_charges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "obligations_linked_savings_goal_id_fkey"
+            columns: ["linked_savings_goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "obligations_linked_tontine_id_fkey"
             columns: ["linked_tontine_id"]
@@ -863,6 +975,7 @@ export type Database = {
       account_type: "Bank" | "Mobile Money" | "Cash" | "Tontine"
       category_nature: "Essential" | "Desire" | "Savings"
       category_type: "Income" | "Expense"
+      fixed_charge_frequency: "monthly" | "quarterly" | "yearly"
       obligation_confidence: "certain" | "probable" | "uncertain"
       obligation_status: "active" | "partially_paid" | "settled" | "cancelled"
       obligation_type: "creance" | "engagement"
@@ -1017,6 +1130,7 @@ export const Constants = {
       account_type: ["Bank", "Mobile Money", "Cash", "Tontine"],
       category_nature: ["Essential", "Desire", "Savings"],
       category_type: ["Income", "Expense"],
+      fixed_charge_frequency: ["monthly", "quarterly", "yearly"],
       obligation_confidence: ["certain", "probable", "uncertain"],
       obligation_status: ["active", "partially_paid", "settled", "cancelled"],
       obligation_type: ["creance", "engagement"],

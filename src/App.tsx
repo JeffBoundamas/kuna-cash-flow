@@ -25,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import NotificationsPage from "@/pages/Notifications";
 import NotificationSettings from "@/pages/NotificationSettings";
 import SmsImport from "@/pages/SmsImport";
+import FixedCharges from "@/pages/FixedCharges";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                       <Route path="/notifications" element={<NotificationsPage />} />
                       <Route path="/notification-settings" element={<NotificationSettings />} />
                       <Route path="/sms-import" element={<SmsImport />} />
+                      <Route path="/fixed-charges" element={<FixedCharges />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AppLayout>
