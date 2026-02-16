@@ -17,7 +17,12 @@ const TontineTimeline = ({ members, currentCycle, onMemberTap }: Props) => {
   );
 
   return (
-    <div className="overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide">
+    <div
+      className="overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide"
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+    >
       <div className="flex items-start gap-0 min-w-max pt-2 pb-2">
         {sortedMembers.map((member, i) => {
           const isReceived = member.has_received_pot;

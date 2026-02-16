@@ -22,6 +22,7 @@ const PaymentMethodPicker = ({ methods, selectedId, onSelect, label = "Moyen de 
         className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide max-w-full"
         onTouchStart={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
       >
         {methods.map((pm) => {
           const Icon = (icons as any)[pm.icon] || (icons as any)["Wallet"];
