@@ -67,13 +67,19 @@ const SmsImport = () => {
       }
     }
     const pool = isIncome ? incomeCategories : expenseCategories;
-    // Search in type-specific pool first
+    // Exact match in type-specific pool
     const found = pool.find(c => c.name.toLowerCase() === suggestedName.toLowerCase());
     if (found) return found.id;
-    // Search across all categories as fallback (e.g. "Mobile Money" is Expense but used for income transfers too)
+    // Search across all categories (e.g. "Mobile Money" may not exist but partial match helps)
     const anyMatch = categories.find(c => c.name.toLowerCase() === suggestedName.toLowerCase());
     if (anyMatch) return anyMatch.id;
-    // Final fallback
+    // Partial match: try to find a category containing the suggested name or vice versa
+    const partialMatch = pool.find(c =>
+      c.name.toLowerCase().includes(suggestedName.toLowerCase()) ||
+      suggestedName.toLowerCase().includes(c.name.toLowerCase())
+    );
+    if (partialMatch) return partialMatch.id;
+    // Final fallback: "Divers" then first available
     const fallback = pool.find(c => c.name === "Divers") || pool[0];
     return fallback?.id || "";
   };
