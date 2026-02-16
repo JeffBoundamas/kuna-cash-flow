@@ -5,6 +5,7 @@ import {
   TrendingUp,
   TrendingDown,
   Wallet,
+  MessageSquare,
 } from "lucide-react";
 import { formatXAF, formatXAFShort } from "@/lib/currency";
 import { useAllTransactions, useDeleteTransaction } from "@/hooks/use-transactions";
@@ -13,6 +14,7 @@ import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-b
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import AddTransactionSheet from "@/components/transactions/AddTransactionSheet";
+import { usePendingSmsCount } from "@/hooks/use-sms-imports";
 import EditTransactionSheet from "@/components/transactions/EditTransactionSheet";
 import SwipeableRow from "@/components/transactions/SwipeableRow";
 import TransactionFilterBar, { emptyFilters, type TransactionFilters } from "@/components/transactions/TransactionFilterBar";
@@ -30,6 +32,7 @@ const Transactions = () => {
   const { data: categories = [] } = useCategories();
   const { data: accounts = [] } = usePaymentMethodsWithBalance();
   const deleteTx = useDeleteTransaction();
+  const { data: pendingSmsCount = 0 } = usePendingSmsCount();
 
   const catMap = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
   const accMap = useMemo(() => new Map(accounts.map(a => [a.id, a])), [accounts]);
@@ -110,6 +113,18 @@ const Transactions = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold font-display">Mouvements</h1>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/sms-import")}
+            className="relative px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-xs font-medium text-primary flex items-center gap-1"
+          >
+            <MessageSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Importer SMS</span>
+            {pendingSmsCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground px-1">
+                {pendingSmsCount}
+              </span>
+            )}
+          </button>
           <span className="text-xs text-muted-foreground">{sorted.length} transactions</span>
           <button
             onClick={() => navigate("/report")}

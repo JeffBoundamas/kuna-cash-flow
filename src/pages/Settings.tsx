@@ -13,6 +13,7 @@ import ExportCSVSheet from "@/components/data/ExportCSVSheet";
 import ExportPDFSheet from "@/components/data/ExportPDFSheet";
 import ImportCSVSheet from "@/components/data/ImportCSVSheet";
 import ResetDataSheet from "@/components/data/ResetDataSheet";
+import SmsSettingsSection from "@/components/sms/SmsSettingsSection";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -252,6 +253,9 @@ const Settings = () => {
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
+
+      {/* SMS Integration */}
+      <SmsSettingsSection />
 
       <Button
         onClick={handleLogout}
