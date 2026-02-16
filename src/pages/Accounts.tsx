@@ -204,7 +204,7 @@ const Accounts = () => {
           </button>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {sorted.map((pm) => {
             const Icon = (icons as any)[pm.icon] || (icons as any)["Wallet"];
             const lastTx = lastTxByPM[pm.id];
