@@ -105,7 +105,7 @@ const TransferSheet = ({ open, onOpenChange }: TransferSheetProps) => {
   };
 
   const renderChips = (selected: string, onSelect: (id: string) => void, exclude?: string, variant: "destructive" | "primary" = "primary") => (
-    <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
+    <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide" onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
       {paymentMethods
         .filter((p) => !exclude || p.id !== exclude)
         .map((pm) => {
