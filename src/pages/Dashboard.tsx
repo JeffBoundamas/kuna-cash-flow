@@ -1,8 +1,7 @@
-import { useMemo, useState, useRef, useCallback, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Plus, Settings, RefreshCw } from "lucide-react";
+import { Calendar, Settings } from "lucide-react";
 import { icons } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import TontineDashboardCard from "@/components/tontines/TontineDashboardCard";
 import { formatXAF, formatXAFShort, calculateResteAVivre } from "@/lib/currency";
@@ -26,8 +25,6 @@ const now = new Date();
 const currentMonth = now.getMonth() + 1;
 const currentYear = now.getFullYear();
 
-const PULL_THRESHOLD = 80;
-
 const Dashboard = () => {
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("kuna_onboarding_done"));
   const { data: methods = [], isLoading: loadingPM } = usePaymentMethodsWithBalance();
@@ -36,52 +33,9 @@ const Dashboard = () => {
   const { data: monthlySummary = [] } = useMonthlySummary(6);
   const { data: monthlySavings = 0 } = useMonthlySavings();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
-  // Pull-to-refresh state
-  const [pullDistance, setPullDistance] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const touchStartY = useRef(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const isPulling = useRef(false);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    const scrollTop = scrollRef.current?.scrollTop ?? 0;
-    if (scrollTop <= 0 && !isRefreshing) {
-      touchStartY.current = e.touches[0].clientY;
-      isPulling.current = true;
-    }
-  }, [isRefreshing]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isPulling.current || isRefreshing) return;
-    const scrollTop = scrollRef.current?.scrollTop ?? 0;
-    if (scrollTop > 0) {
-      isPulling.current = false;
-      setPullDistance(0);
-      return;
-    }
-    const dy = e.touches[0].clientY - touchStartY.current;
-    if (dy > 0) {
-      // Dampen the pull (logarithmic feel)
-      setPullDistance(Math.min(dy * 0.4, 120));
-    }
-  }, [isRefreshing]);
-
-  const handleTouchEnd = useCallback(async () => {
-    if (!isPulling.current) return;
-    isPulling.current = false;
-
-    if (pullDistance >= PULL_THRESHOLD) {
-      setIsRefreshing(true);
-      setPullDistance(PULL_THRESHOLD * 0.5);
-      await queryClient.invalidateQueries();
-      // Small delay for visual feedback
-      await new Promise(r => setTimeout(r, 600));
-      setIsRefreshing(false);
-    }
-    setPullDistance(0);
-  }, [pullDistance, queryClient]);
 
   const totalBalance = useMemo(() => methods.filter(m => m.is_active).reduce((sum, m) => sum + m.currentBalance, 0), [methods]);
   const monthlyIncome = useMemo(() => transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0), [transactions]);
@@ -124,32 +78,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div
-      ref={scrollRef}
-      className="h-full overflow-y-auto overflow-x-hidden relative"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Pull-to-refresh indicator */}
-      <div
-        className="flex items-center justify-center overflow-hidden transition-all"
-        style={{ height: pullDistance > 0 || isRefreshing ? `${Math.max(pullDistance, isRefreshing ? 40 : 0)}px` : "0px" }}
-      >
-        <RefreshCw
-          className={cn(
-            "h-5 w-5 text-primary transition-transform",
-            isRefreshing && "animate-spin",
-            pullDistance >= PULL_THRESHOLD && !isRefreshing && "text-primary"
-          )}
-          style={{
-            transform: isRefreshing ? undefined : `rotate(${pullDistance * 3}deg)`,
-            opacity: Math.min(pullDistance / PULL_THRESHOLD, 1),
-          }}
-        />
-      </div>
-
-      <div className="px-4 pt-6 pb-4 space-y-5">
+    <div className="px-4 pt-6 pb-4 space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -239,8 +168,7 @@ const Dashboard = () => {
         <IncomeExpenseChart data={monthlySummary} />
 
         {/* Recent Transactions */}
-        <RecentTransactions transactions={transactions} categories={categories} />
-      </div>
+      <RecentTransactions transactions={transactions} categories={categories} />
     </div>
   );
 };
