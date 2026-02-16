@@ -13,7 +13,7 @@ const tabs = [
 const BottomNav = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-lg safe-area-bottom">
-      <div className="mx-auto flex max-w-lg md:max-w-2xl lg:max-w-4xl items-center justify-around py-1.5">
+      <div className="mx-auto flex max-w-lg items-center justify-around py-1.5">
         {tabs.map(({ to, icon: Icon, label }) => (
           <RouterNavLink
             key={to}

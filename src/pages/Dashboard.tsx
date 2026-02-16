@@ -78,9 +78,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="px-4 pt-6 pb-4 space-y-5 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
+    <div className="px-4 pt-6 pb-4 space-y-5">
         {/* Header */}
-        <div className="flex items-center justify-between lg:col-span-2">
+        <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground">Bonjour 👋</p>
             <h1 className="text-xl font-bold font-display">Kuna Finance</h1>
@@ -96,9 +96,7 @@ const Dashboard = () => {
         </div>
 
         {/* Net Worth Card */}
-        <div className="lg:col-span-2">
-          <BalanceCard totalBalance={totalBalance} monthlyIncome={monthlyIncome} monthlyExpenses={monthlyExpenses} />
-        </div>
+        <BalanceCard totalBalance={totalBalance} monthlyIncome={monthlyIncome} monthlyExpenses={monthlyExpenses} />
 
         {/* Reste à vivre */}
         <div className={cn("rounded-xl p-4 flex items-center justify-between animate-fade-in", resteAVivre >= 0 ? "bg-emerald-light" : "bg-destructive/10")} style={{ animationDelay: "0.05s" }}>
@@ -124,7 +122,7 @@ const Dashboard = () => {
         <SavingsRate monthlyIncome={monthlyIncome} monthlySavings={monthlySavings} />
 
         {/* Accounts from payment methods */}
-        <div className="animate-fade-in lg:col-span-2" style={{ animationDelay: "0.12s" }}>
+        <div className="animate-fade-in" style={{ animationDelay: "0.12s" }}>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-semibold font-display text-muted-foreground">Mes Comptes</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/portfolio")} className="h-7 px-2 text-xs">
@@ -170,9 +168,7 @@ const Dashboard = () => {
         <IncomeExpenseChart data={monthlySummary} />
 
         {/* Recent Transactions */}
-        <div className="lg:col-span-2">
-          <RecentTransactions transactions={transactions} categories={categories} />
-        </div>
+      <RecentTransactions transactions={transactions} categories={categories} />
     </div>
   );
 };

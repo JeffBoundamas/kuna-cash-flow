@@ -4,12 +4,6 @@
   overflow-x: hidden;
 }
 
-@media (min-width: 768px) {
-  #root {
-    max-width: 100%;
-  }
-}
-
 .logo {
   height: 6em;
   padding: 1.5em;
