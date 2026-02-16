@@ -20,7 +20,7 @@ const Portfolio = () => {
   const [searchParams] = useSearchParams();
   const initialTab = (TABS.find(t => t.key === searchParams.get("tab"))?.key ?? "comptes") as TabKey;
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-  const [direction, setDirection] = useState(0); // -1 left, 1 right
+  const [direction, setDirection] = useState(0);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const prevIndex = useRef(TABS.findIndex(t => t.key === initialTab));
@@ -70,19 +70,19 @@ const Portfolio = () => {
   return (
     <div className="flex flex-col min-h-0">
       {/* Header */}
-      <div className="px-4 pt-6 pb-2">
+      <div className="px-4 lg:px-6 pt-6 pb-2">
         <h1 className="text-xl font-bold font-display">Portefeuille</h1>
       </div>
 
       {/* Horizontal tabs */}
-      <div className="px-4">
+      <div className="px-4 lg:px-6">
         <div className="flex border-b border-border relative">
           {TABS.map((tab, i) => (
             <button
               key={tab.key}
               onClick={() => changeTab(tab.key)}
               className={cn(
-                "flex-1 pb-2.5 pt-1 text-sm font-medium text-center transition-colors relative",
+                "flex-1 lg:flex-none lg:px-6 pb-2.5 pt-1 text-sm lg:text-base font-medium text-center transition-colors relative",
                 activeTab === tab.key
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"

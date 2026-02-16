@@ -106,7 +106,7 @@ const Transactions = () => {
   };
 
   return (
-    <div className="px-4 pt-6 space-y-4 pb-24">
+    <div className="px-4 lg:px-6 pt-6 space-y-4 pb-24 lg:pb-8">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold font-display">Mouvements</h1>
         <div className="flex items-center gap-2">
@@ -169,6 +169,15 @@ const Transactions = () => {
         </p>
       ) : (
         <div className="space-y-4">
+          {/* Desktop column headers */}
+          <div className="hidden lg:flex items-center gap-3 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
+            <div className="w-9" />
+            <div className="flex-1">Libellé</div>
+            <div className="w-28">Catégorie</div>
+            <div className="w-28">Compte</div>
+            <div className="w-20">Statut</div>
+            <div className="w-24 text-right">Montant</div>
+          </div>
           {Object.entries(grouped).map(([date, txs]) => (
             <div key={date} className="animate-fade-in">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -200,13 +209,17 @@ const Transactions = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{tx.label}</p>
-                          <p className="text-[11px] text-muted-foreground truncate">
+                          <p className="text-[11px] text-muted-foreground truncate lg:hidden">
                             {cat?.name} · {acc?.name}
                           </p>
                         </div>
+                        {/* Desktop extra columns */}
+                        <span className="hidden lg:block text-xs text-muted-foreground w-28 truncate">{cat?.name}</span>
+                        <span className="hidden lg:block text-xs text-muted-foreground w-28 truncate">{acc?.name}</span>
+                        <span className="hidden lg:block text-xs text-muted-foreground w-20">{tx.status === "Planned" ? "Prévu" : "Réalisé"}</span>
                         <p
                           className={cn(
-                            "text-sm font-bold font-display whitespace-nowrap",
+                            "text-sm font-bold font-display whitespace-nowrap lg:w-24 lg:text-right",
                             isIncome ? "text-primary" : "text-foreground"
                           )}
                         >
