@@ -80,13 +80,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       {/* Main content wrapper - offset for sidebar on desktop */}
       <div className="lg:pl-60">
         {/* Top notification bar */}
-        <div className="sticky top-0 z-30 flex justify-end px-4 py-2 bg-background/80 backdrop-blur-sm mx-auto max-w-lg md:max-w-2xl lg:max-w-5xl">
+        <div className="sticky top-0 z-30 flex justify-end px-4 py-2 bg-background/80 backdrop-blur-sm mx-auto max-w-lg md:max-w-2xl lg:max-w-6xl xl:max-w-7xl">
           <NotificationBell />
         </div>
 
         <main
           ref={scrollRef}
-          className="mx-auto max-w-lg md:max-w-2xl lg:max-w-5xl pb-24 lg:pb-8 overflow-y-auto overflow-x-hidden"
+          className="mx-auto max-w-lg md:max-w-2xl lg:max-w-6xl xl:max-w-7xl pb-24 lg:pb-8 overflow-y-auto overflow-x-hidden"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
