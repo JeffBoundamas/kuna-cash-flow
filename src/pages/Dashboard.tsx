@@ -19,6 +19,7 @@ import ExpensesByCategoryDonut from "@/components/dashboard/ExpensesByCategoryDo
 import IncomeExpenseChart from "@/components/dashboard/IncomeExpenseChart";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import TresorerieCard from "@/components/dashboard/TresorerieCard";
+import ChargesDuMoisWidget from "@/components/dashboard/ChargesDuMoisWidget";
 import { cn } from "@/lib/utils";
 
 const now = new Date();
@@ -116,6 +117,9 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Trésorerie réelle */}
           <TresorerieCard totalBalance={totalBalance} />
+
+          {/* Charges du mois */}
+          <ChargesDuMoisWidget />
 
           {/* Tontines Summary */}
           <TontineDashboardCard />

@@ -29,6 +29,10 @@ export const useAddGoal = () => {
       deadline: string;
       icon?: string;
       is_emergency_fund?: boolean;
+      auto_contribute?: boolean;
+      monthly_contribution?: number;
+      contribute_day?: number;
+      preferred_payment_method_id?: string;
     }) => {
       const { error } = await supabase.from("goals").insert([{
         user_id: user!.id,
@@ -37,6 +41,10 @@ export const useAddGoal = () => {
         deadline: goal.deadline,
         icon: goal.icon || "target",
         is_emergency_fund: goal.is_emergency_fund || false,
+        auto_contribute: goal.auto_contribute || false,
+        monthly_contribution: goal.monthly_contribution || 0,
+        contribute_day: goal.contribute_day || 1,
+        preferred_payment_method_id: goal.preferred_payment_method_id || null,
       }]);
       if (error) throw error;
     },

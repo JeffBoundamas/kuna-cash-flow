@@ -60,6 +60,10 @@ export interface Goal {
   deadline: string;
   icon: string;
   is_emergency_fund: boolean;
+  auto_contribute: boolean;
+  monthly_contribution: number;
+  contribute_day: number;
+  preferred_payment_method_id: string | null;
   created_at: string;
   updated_at: string;
 }

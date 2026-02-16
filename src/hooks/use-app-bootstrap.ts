@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatXAF } from "@/lib/currency";
 
 const REMINDER_KEY = "daily_reminder_last";
+const OBLIGATION_GEN_KEY = "obligation_gen_last";
 
 const REQUIRED_CATEGORIES = [
   { name: "Mobile Money", type: "Expense" as const, nature: "Essential" as const, color: "amber" },
@@ -51,6 +52,25 @@ export const useAppBootstrap = () => {
           description: "Avez-vous enregistré vos dépenses aujourd'hui ?",
         });
       }, 2000);
+    }
+
+    // 3. Auto-generate obligations from fixed charges + savings goals (once per day)
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const lastGen = localStorage.getItem(OBLIGATION_GEN_KEY);
+    if (lastGen !== monthKey) {
+      localStorage.setItem(OBLIGATION_GEN_KEY, monthKey);
+      fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-obligations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        }
+      ).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["obligations"] });
+      }).catch(() => {});
     }
   }, []);
 

@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAddGoal } from "@/hooks/use-goals";
+import { usePaymentMethods } from "@/hooks/use-payment-methods";
 import { toast } from "sonner";
 import { Shield, MapPin, GraduationCap, Target, Heart, Home, Car, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,14 +33,24 @@ const AddGoalSheet = ({ open, onOpenChange }: Props) => {
   const [deadline, setDeadline] = useState("");
   const [icon, setIcon] = useState("target");
   const [isEmergency, setIsEmergency] = useState(false);
+  const [autoContribute, setAutoContribute] = useState(false);
+  const [monthlyContribution, setMonthlyContribution] = useState("");
+  const [contributeDay, setContributeDay] = useState("1");
+  const [preferredPmId, setPreferredPmId] = useState("");
   const addGoal = useAddGoal();
+  const { data: methods = [] } = usePaymentMethods();
+
+  const autoCalc = useMemo(() => {
+    const amount = parseInt(targetAmount.replace(/\s/g, ""), 10);
+    if (!amount || !deadline) return 0;
+    const months = Math.max(1, Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30)));
+    return Math.ceil(amount / months);
+  }, [targetAmount, deadline]);
 
   const reset = () => {
-    setName("");
-    setTargetAmount("");
-    setDeadline("");
-    setIcon("target");
-    setIsEmergency(false);
+    setName(""); setTargetAmount(""); setDeadline(""); setIcon("target");
+    setIsEmergency(false); setAutoContribute(false); setMonthlyContribution("");
+    setContributeDay("1"); setPreferredPmId("");
   };
 
   const handleSubmit = () => {
@@ -47,14 +59,16 @@ const AddGoalSheet = ({ open, onOpenChange }: Props) => {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
+    const mc = autoContribute ? (parseInt(monthlyContribution, 10) || autoCalc) : 0;
     addGoal.mutate(
-      { name: name.trim(), target_amount: amount, deadline, icon, is_emergency_fund: isEmergency },
       {
-        onSuccess: () => {
-          toast.success("Objectif créé !");
-          reset();
-          onOpenChange(false);
-        },
+        name: name.trim(), target_amount: amount, deadline, icon, is_emergency_fund: isEmergency,
+        auto_contribute: autoContribute, monthly_contribution: mc,
+        contribute_day: parseInt(contributeDay, 10) || 1,
+        preferred_payment_method_id: preferredPmId || undefined,
+      },
+      {
+        onSuccess: () => { toast.success("Objectif créé !"); reset(); onOpenChange(false); },
         onError: () => toast.error("Erreur lors de la création"),
       }
     );
@@ -109,6 +123,46 @@ const AddGoalSheet = ({ open, onOpenChange }: Props) => {
             </div>
             <Switch checked={isEmergency} onCheckedChange={setIsEmergency} />
           </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <p className="text-sm font-medium">Versements planifiés</p>
+              <p className="text-[11px] text-muted-foreground">Crée un engagement mensuel pour impacter la trésorerie</p>
+            </div>
+            <Switch checked={autoContribute} onCheckedChange={setAutoContribute} />
+          </div>
+
+          {autoContribute && (
+            <div className="space-y-3 pl-3 border-l-2 border-primary/20">
+              <div>
+                <Label>Montant par mois (FCFA)</Label>
+                <Input
+                  type="number"
+                  value={monthlyContribution}
+                  onChange={e => setMonthlyContribution(e.target.value)}
+                  placeholder={`Suggestion : ${autoCalc}`}
+                />
+                <p className="text-[10px] text-muted-foreground mt-0.5">Calculé : {autoCalc} FCFA/mois</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Jour de versement</Label>
+                  <Input type="number" min={1} max={31} value={contributeDay} onChange={e => setContributeDay(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Moyen de paiement</Label>
+                  <Select value={preferredPmId} onValueChange={setPreferredPmId}>
+                    <SelectTrigger><SelectValue placeholder="Optionnel" /></SelectTrigger>
+                    <SelectContent>
+                      {methods.filter(m => m.is_active).map(m => (
+                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
 
           <Button onClick={handleSubmit} className="w-full" disabled={addGoal.isPending}>
             {addGoal.isPending ? "Création..." : "Créer l'objectif"}
