@@ -67,9 +67,13 @@ const SmsImport = () => {
       }
     }
     const pool = isIncome ? incomeCategories : expenseCategories;
+    // Search in type-specific pool first
     const found = pool.find(c => c.name.toLowerCase() === suggestedName.toLowerCase());
     if (found) return found.id;
-    // Fallback
+    // Search across all categories as fallback (e.g. "Mobile Money" is Expense but used for income transfers too)
+    const anyMatch = categories.find(c => c.name.toLowerCase() === suggestedName.toLowerCase());
+    if (anyMatch) return anyMatch.id;
+    // Final fallback
     const fallback = pool.find(c => c.name === "Divers") || pool[0];
     return fallback?.id || "";
   };
