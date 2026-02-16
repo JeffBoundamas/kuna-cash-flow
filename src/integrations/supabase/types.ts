@@ -538,6 +538,103 @@ export type Database = {
           },
         ]
       }
+      sms_imports: {
+        Row: {
+          created_at: string
+          id: string
+          linked_transaction_id: string | null
+          parsed_amount: number
+          parsed_balance: number | null
+          parsed_fees: number
+          parsed_recipient: string | null
+          parsed_reference: string | null
+          parsed_type: Database["public"]["Enums"]["sms_parsed_type"]
+          raw_text: string
+          status: Database["public"]["Enums"]["sms_import_status"]
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          linked_transaction_id?: string | null
+          parsed_amount?: number
+          parsed_balance?: number | null
+          parsed_fees?: number
+          parsed_recipient?: string | null
+          parsed_reference?: string | null
+          parsed_type: Database["public"]["Enums"]["sms_parsed_type"]
+          raw_text: string
+          status?: Database["public"]["Enums"]["sms_import_status"]
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          linked_transaction_id?: string | null
+          parsed_amount?: number
+          parsed_balance?: number | null
+          parsed_fees?: number
+          parsed_recipient?: string | null
+          parsed_reference?: string | null
+          parsed_type?: Database["public"]["Enums"]["sms_parsed_type"]
+          raw_text?: string
+          status?: Database["public"]["Enums"]["sms_import_status"]
+          transaction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_imports_linked_transaction_id_fkey"
+            columns: ["linked_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_settings: {
+        Row: {
+          api_key: string
+          category_mappings: Json
+          created_at: string
+          default_payment_method_id: string | null
+          enabled: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key?: string
+          category_mappings?: Json
+          created_at?: string
+          default_payment_method_id?: string | null
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          category_mappings?: Json
+          created_at?: string
+          default_payment_method_id?: string | null
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_settings_default_payment_method_id_fkey"
+            columns: ["default_payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tontine_members: {
         Row: {
           created_at: string
@@ -775,6 +872,17 @@ export type Database = {
         | "mobile_money"
         | "credit_card"
         | "check"
+      sms_import_status:
+        | "pending_review"
+        | "confirmed"
+        | "rejected"
+        | "duplicate"
+      sms_parsed_type:
+        | "transfer_out"
+        | "transfer_in"
+        | "bundle"
+        | "merchant_payment"
+        | "bill_payment"
       tontine_frequency: "weekly" | "monthly"
       tontine_payment_type: "contribution" | "pot_received"
       tontine_status: "active" | "completed"
@@ -918,6 +1026,19 @@ export const Constants = {
         "mobile_money",
         "credit_card",
         "check",
+      ],
+      sms_import_status: [
+        "pending_review",
+        "confirmed",
+        "rejected",
+        "duplicate",
+      ],
+      sms_parsed_type: [
+        "transfer_out",
+        "transfer_in",
+        "bundle",
+        "merchant_payment",
+        "bill_payment",
       ],
       tontine_frequency: ["weekly", "monthly"],
       tontine_payment_type: ["contribution", "pot_received"],
