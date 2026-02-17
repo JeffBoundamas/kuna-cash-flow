@@ -6,7 +6,7 @@ import { LogOut, User, Mail, Phone, ChevronRight, ArrowDownCircle, ArrowUpCircle
 import { useNavigate } from "react-router-dom";
 import { useRecurringTransactions } from "@/hooks/use-recurring-transactions";
 import { useCategories } from "@/hooks/use-categories";
-import { useAccounts } from "@/hooks/use-accounts";
+import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
 import { toast } from "@/hooks/use-toast";
 import { formatXAF } from "@/lib/currency";
 import ExportCSVSheet from "@/components/data/ExportCSVSheet";
@@ -27,7 +27,7 @@ const Settings = () => {
 
   const { data: recurrings = [] } = useRecurringTransactions();
   const { data: categories = [] } = useCategories();
-  const { data: accounts = [] } = useAccounts();
+  const { data: accounts = [] } = usePaymentMethodsWithBalance();
 
   const catMap = new Map(categories.map(c => [c.id, c]));
   const accMap = new Map(accounts.map(a => [a.id, a]));
@@ -138,7 +138,7 @@ const Settings = () => {
           <div className="divide-y divide-border">
             {recurrings.map((rt) => {
               const cat = catMap.get(rt.category_id);
-              const acc = accMap.get(rt.account_id);
+              const acc = accMap.get(rt.payment_method_id || rt.account_id || "");
               return (
                 <div key={rt.id} className="flex items-center justify-between px-5 py-3">
                   <div className="min-w-0">

@@ -61,7 +61,7 @@ const LogObligationPaymentSheet = ({ open, onOpenChange, obligation, onSettled }
         obligation,
         amount: numAmount,
         payment_date: date,
-        account_id: selectedPM,
+        payment_method_id: selectedPM,
         notes: notes.trim() || undefined,
       });
       toast({

@@ -133,7 +133,6 @@ const SmsImport = () => {
 
       // Create transaction
       await addTransaction.mutateAsync({
-        account_id: item.selectedPaymentMethodId,
         category_id: item.selectedCategory,
         amount,
         label: item.parsed.label,

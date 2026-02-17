@@ -77,7 +77,7 @@ export const useDeleteGoal = () => {
 export const useAddFundsToGoal = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ goalId, amount, accountId }: { goalId: string; amount: number; accountId: string }) => {
+    mutationFn: async ({ goalId, amount, paymentMethodId }: { goalId: string; amount: number; paymentMethodId: string }) => {
       // Get current goal amount
       const { data: goal, error: goalErr } = await supabase
         .from("goals")
@@ -86,18 +86,6 @@ export const useAddFundsToGoal = () => {
         .single();
       if (goalErr) throw goalErr;
 
-      // Get current account balance
-      const { data: account, error: accErr } = await supabase
-        .from("accounts")
-        .select("balance")
-        .eq("id", accountId)
-        .single();
-      if (accErr) throw accErr;
-
-      if (account.balance < amount) {
-        throw new Error("Solde insuffisant sur ce compte");
-      }
-
       // Update goal
       const { error: updateGoalErr } = await supabase
         .from("goals")
@@ -105,22 +93,15 @@ export const useAddFundsToGoal = () => {
         .eq("id", goalId);
       if (updateGoalErr) throw updateGoalErr;
 
-      // Deduct from account
-      const { error: updateAccErr } = await supabase
-        .from("accounts")
-        .update({ balance: account.balance - amount })
-        .eq("id", accountId);
-      if (updateAccErr) throw updateAccErr;
-
       // Track contribution
       const { error: contribErr } = await supabase
         .from("goal_contributions")
-        .insert([{ user_id: (await supabase.auth.getUser()).data.user!.id, goal_id: goalId, account_id: accountId, amount }]);
+        .insert([{ user_id: (await supabase.auth.getUser()).data.user!.id, goal_id: goalId, account_id: paymentMethodId, payment_method_id: paymentMethodId, amount }]);
       if (contribErr) throw contribErr;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
       qc.invalidateQueries({ queryKey: ["monthly-savings"] });
     },
   });

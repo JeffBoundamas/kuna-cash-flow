@@ -195,7 +195,7 @@ export type Database = {
       }
       goal_contributions: {
         Row: {
-          account_id: string
+          account_id: string | null
           amount: number
           created_at: string
           goal_id: string
@@ -204,7 +204,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           amount: number
           created_at?: string
           goal_id: string
@@ -213,7 +213,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           amount?: number
           created_at?: string
           goal_id?: string
@@ -595,7 +595,7 @@ export type Database = {
       }
       recurring_transactions: {
         Row: {
-          account_id: string
+          account_id: string | null
           amount: number
           category_id: string
           created_at: string
@@ -604,11 +604,12 @@ export type Database = {
           is_active: boolean
           label: string
           next_due_date: string
+          payment_method_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           amount: number
           category_id: string
           created_at?: string
@@ -617,11 +618,12 @@ export type Database = {
           is_active?: boolean
           label?: string
           next_due_date?: string
+          payment_method_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           amount?: number
           category_id?: string
           created_at?: string
@@ -630,6 +632,7 @@ export type Database = {
           is_active?: boolean
           label?: string
           next_due_date?: string
+          payment_method_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -646,6 +649,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_transactions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
         ]
@@ -899,7 +909,7 @@ export type Database = {
       }
       transactions: {
         Row: {
-          account_id: string
+          account_id: string | null
           amount: number
           category_id: string
           created_at: string
@@ -913,7 +923,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           amount: number
           category_id: string
           created_at?: string
@@ -927,7 +937,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           amount?: number
           category_id?: string
           created_at?: string

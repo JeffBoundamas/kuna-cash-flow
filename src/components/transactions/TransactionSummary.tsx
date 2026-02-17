@@ -2,12 +2,12 @@ import { useMemo } from "react";
 import { TrendingUp, TrendingDown, ArrowRightLeft } from "lucide-react";
 import { formatXAF } from "@/lib/currency";
 import { cn } from "@/lib/utils";
-import type { Transaction, Category, Account } from "@/lib/types";
+import type { Transaction, Category } from "@/lib/types";
 
 interface TransactionSummaryProps {
   transactions: Transaction[];
   catMap: Map<string, Category>;
-  accMap: Map<string, Account>;
+  accMap: Map<string, { name: string }>;
 }
 
 const TransactionSummary = ({ transactions, catMap, accMap }: TransactionSummaryProps) => {

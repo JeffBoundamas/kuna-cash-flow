@@ -36,7 +36,7 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
       setType(transaction.amount > 0 ? "income" : "expense");
       setAmount(String(Math.abs(transaction.amount)));
       setLabel(transaction.label);
-      setPmId(transaction.payment_method_id || transaction.account_id);
+      setPmId(transaction.payment_method_id || transaction.account_id || "");
       setCategoryId(transaction.category_id);
       setDate(transaction.date);
       setNote(transaction.sms_reference || "");
@@ -71,9 +71,6 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
     try {
       await updateTransaction.mutateAsync({
         id: transaction.id,
-        oldAmount: transaction.amount,
-        oldAccountId: transaction.account_id,
-        account_id: pmId,
         category_id: categoryId,
         amount: finalAmount,
         label: label || "Transaction",

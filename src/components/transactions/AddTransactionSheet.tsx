@@ -77,7 +77,6 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
 
     try {
       await addTransaction.mutateAsync({
-        account_id: selectedPM,
         payment_method_id: selectedPM,
         category_id: categoryId,
         amount: finalAmount,
@@ -88,7 +87,7 @@ const AddTransactionSheet = ({ open, onOpenChange }: AddTransactionSheetProps) =
 
       if (isRecurring) {
         await addRecurring.mutateAsync({
-          account_id: selectedPM,
+          payment_method_id: selectedPM,
           category_id: categoryId,
           amount: finalAmount,
           label: label || "Transaction",

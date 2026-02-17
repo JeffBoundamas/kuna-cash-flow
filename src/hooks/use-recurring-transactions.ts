@@ -8,7 +8,8 @@ export type RecurringFrequency = "daily" | "weekly" | "monthly";
 export interface RecurringTransaction {
   id: string;
   user_id: string;
-  account_id: string;
+  account_id: string | null;
+  payment_method_id: string | null;
   category_id: string;
   amount: number;
   label: string;
@@ -40,7 +41,7 @@ export const useAddRecurringTransaction = () => {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (rt: {
-      account_id: string;
+      payment_method_id?: string;
       category_id: string;
       amount: number;
       label: string;
@@ -49,7 +50,12 @@ export const useAddRecurringTransaction = () => {
     }) => {
       const { error } = await supabase.from("recurring_transactions").insert([{
         user_id: user!.id,
-        ...rt,
+        payment_method_id: rt.payment_method_id,
+        category_id: rt.category_id,
+        amount: rt.amount,
+        label: rt.label,
+        frequency: rt.frequency,
+        next_due_date: rt.next_due_date,
       }]);
       if (error) throw error;
     },
@@ -90,7 +96,7 @@ export const useGenerateRecurring = () => {
       for (const rt of recurrings as RecurringTransaction[]) {
         // Create the transaction
         await addTransaction.mutateAsync({
-          account_id: rt.account_id,
+          payment_method_id: rt.payment_method_id || undefined,
           category_id: rt.category_id,
           amount: rt.amount,
           label: rt.label,
@@ -109,7 +115,7 @@ export const useGenerateRecurring = () => {
       qc.invalidateQueries({ queryKey: ["recurring-transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions-all"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
     },
   });
 };

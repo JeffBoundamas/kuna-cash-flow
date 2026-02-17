@@ -59,7 +59,7 @@ const Accounts = () => {
 
   const handleDelete = async (tx: Transaction) => {
     try {
-      await deleteTx.mutateAsync({ id: tx.id, amount: tx.amount, accountId: tx.account_id });
+      await deleteTx.mutateAsync({ id: tx.id });
       toast({ title: "Transaction supprimée" });
     } catch {
       toast({ title: "Erreur", variant: "destructive" });
