@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Upload, AlertTriangle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCategories } from "@/hooks/use-categories";
-import { useAccounts } from "@/hooks/use-accounts";
+import { useActivePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -34,7 +34,7 @@ const ImportCSVSheet = ({ open, onOpenChange }: Props) => {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: categories = [] } = useCategories();
-  const { data: accounts = [] } = useAccounts();
+  const { data: accounts = [] } = useActivePaymentMethodsWithBalance();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [headers, setHeaders] = useState<string[]>([]);
@@ -119,32 +119,22 @@ const ImportCSVSheet = ({ open, onOpenChange }: Props) => {
 
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
-        account_id: accountId,
         category_id: categoryId,
         amount: Math.round(amountVal),
         label: labelVal,
         date: parsedDate,
+        payment_method_id: accountId,
       });
 
       if (error) skipped++;
       else imported++;
     }
 
-    // Update account balance
-    if (imported > 0) {
-      const { data: acc } = await supabase.from("accounts").select("balance").eq("id", accountId).maybeSingle();
-      if (acc) {
-        const totalAmount = rows.reduce((sum, row) => {
-          const val = parseFloat(row[amountIdx]?.replace(/\s/g, "").replace(",", "."));
-          return isNaN(val) ? sum : sum + Math.round(val);
-        }, 0);
-        await supabase.from("accounts").update({ balance: acc.balance + totalAmount }).eq("id", accountId);
-      }
-    }
+    // No longer need to update account balance — computed from transactions
 
     qc.invalidateQueries({ queryKey: ["transactions"] });
     qc.invalidateQueries({ queryKey: ["transactions-all"] });
-    qc.invalidateQueries({ queryKey: ["accounts"] });
+    qc.invalidateQueries({ queryKey: ["payment_methods"] });
 
     toast({ title: `${imported} transaction${imported > 1 ? "s" : ""} importée${imported > 1 ? "s" : ""}${skipped > 0 ? `, ${skipped} ignorée${skipped > 1 ? "s" : ""}` : ""}` });
     setImporting(false);

@@ -27,6 +27,7 @@ export interface ObligationPayment {
   amount: number;
   payment_date: string;
   account_id: string | null;
+  payment_method_id: string | null;
   notes: string | null;
   created_at: string;
 }

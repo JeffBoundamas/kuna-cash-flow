@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { enqueueTransaction } from "@/hooks/use-offline-queue";
 import type { Transaction } from "@/lib/types";
 
 export const useTransactions = (month?: number, year?: number) => {
@@ -18,7 +17,6 @@ export const useTransactions = (month?: number, year?: number) => {
         { event: "*", schema: "public", table: "transactions" },
         () => {
           qc.invalidateQueries({ queryKey: ["transactions"] });
-          qc.invalidateQueries({ queryKey: ["accounts"] });
           qc.invalidateQueries({ queryKey: ["payment_methods"] });
         }
       )
@@ -71,7 +69,6 @@ export const useAddTransaction = () => {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (tx: {
-      account_id: string;
       category_id: string;
       amount: number;
       label: string;
@@ -80,28 +77,14 @@ export const useAddTransaction = () => {
       sms_reference?: string;
       payment_method_id?: string;
     }) => {
-      if (!navigator.onLine) {
-        enqueueTransaction({
-          user_id: user!.id,
-          account_id: tx.account_id,
-          category_id: tx.category_id,
-          amount: tx.amount,
-          label: tx.label || "Transaction",
-          date: tx.date || new Date().toISOString().slice(0, 10),
-          sms_reference: tx.sms_reference,
-        });
-        return;
-      }
-
       const payload = {
         user_id: user!.id,
-        account_id: tx.account_id,
         category_id: tx.category_id,
         amount: tx.amount,
         label: tx.label || "Transaction",
         date: tx.date,
         sms_reference: tx.sms_reference,
-        payment_method_id: tx.payment_method_id || tx.account_id,
+        payment_method_id: tx.payment_method_id,
         ...(tx.status ? { status: tx.status } : {}),
       };
       const { error } = await supabase.from("transactions").insert([payload]);
@@ -110,7 +93,6 @@ export const useAddTransaction = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions-all"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
       qc.invalidateQueries({ queryKey: ["payment_methods"] });
     },
   });
@@ -119,11 +101,8 @@ export const useAddTransaction = () => {
 export const useUpdateTransaction = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, oldAmount, oldAccountId, ...updates }: {
+    mutationFn: async ({ id, ...updates }: {
       id: string;
-      oldAmount: number;
-      oldAccountId: string;
-      account_id: string;
       category_id: string;
       amount: number;
       label: string;
@@ -134,13 +113,12 @@ export const useUpdateTransaction = () => {
       const { error } = await supabase
         .from("transactions")
         .update({
-          account_id: updates.account_id,
           category_id: updates.category_id,
           amount: updates.amount,
           label: updates.label,
           date: updates.date,
           sms_reference: updates.sms_reference,
-          payment_method_id: updates.payment_method_id || updates.account_id,
+          payment_method_id: updates.payment_method_id,
         })
         .eq("id", id);
       if (error) throw error;
@@ -148,7 +126,6 @@ export const useUpdateTransaction = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions-all"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
       qc.invalidateQueries({ queryKey: ["payment_methods"] });
     },
   });
@@ -157,14 +134,13 @@ export const useUpdateTransaction = () => {
 export const useDeleteTransaction = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, amount, accountId }: { id: string; amount: number; accountId: string }) => {
+    mutationFn: async ({ id }: { id: string }) => {
       const { error } = await supabase.from("transactions").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions-all"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
       qc.invalidateQueries({ queryKey: ["payment_methods"] });
     },
   });

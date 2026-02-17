@@ -84,7 +84,6 @@ export const useCreateTontine = () => {
       members: { name: string; is_current_user: boolean }[];
     }) => {
       if (!user) throw new Error("Not authenticated");
-      // Create tontine
       const { data: tontine, error } = await supabase
         .from("tontines")
         .insert({
@@ -99,7 +98,6 @@ export const useCreateTontine = () => {
         .single();
       if (error) throw error;
 
-      // Create members with calculated payout dates
       const startDate = new Date(input.start_date);
       const members = input.members.map((m, i) => {
         const payoutDate = new Date(startDate);
@@ -123,7 +121,7 @@ export const useCreateTontine = () => {
         .insert(members);
       if (membersError) throw membersError;
 
-      // ── Auto-create obligations ──
+      // Auto-create obligations
       const myPosition = input.members.findIndex((m) => m.is_current_user);
       const potTotal = input.contribution_amount * input.members.length;
       const obligations: Array<{
@@ -139,7 +137,6 @@ export const useCreateTontine = () => {
         linked_tontine_id: string;
       }> = [];
 
-      // Engagements for each future contribution cycle
       for (let cycle = 0; cycle < input.members.length; cycle++) {
         const dueDate = new Date(input.start_date);
         if (input.frequency === "monthly") {
@@ -161,7 +158,6 @@ export const useCreateTontine = () => {
         });
       }
 
-      // Créance for the pot to receive
       if (myPosition >= 0) {
         const payoutDate = new Date(input.start_date);
         if (input.frequency === "monthly") {
@@ -204,7 +200,7 @@ export const useLogContribution = () => {
       tontine_id: string;
       amount: number;
       cycle_number: number;
-      linked_account_id: string;
+      payment_method_id: string;
       tontine_name: string;
     }) => {
       if (!user) throw new Error("Not authenticated");
@@ -216,7 +212,7 @@ export const useLogContribution = () => {
         amount: input.amount,
         cycle_number: input.cycle_number,
         type: "contribution" as const,
-        linked_account_id: input.linked_account_id,
+        payment_method_id: input.payment_method_id,
       });
       if (error) throw error;
 
@@ -241,25 +237,12 @@ export const useLogContribution = () => {
       if (category) {
         await supabase.from("transactions").insert({
           user_id: user.id,
-          account_id: input.linked_account_id,
           category_id: category.id,
           amount: -input.amount,
           label: `Cotisation - ${input.tontine_name}`,
           status: "Realized" as const,
+          payment_method_id: input.payment_method_id,
         });
-
-        // Debit account
-        const { data: account } = await supabase
-          .from("accounts")
-          .select("balance")
-          .eq("id", input.linked_account_id)
-          .single();
-        if (account) {
-          await supabase
-            .from("accounts")
-            .update({ balance: account.balance - input.amount })
-            .eq("id", input.linked_account_id);
-        }
       }
 
       // Auto-settle matching engagement obligation
@@ -287,7 +270,8 @@ export const useLogContribution = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tontine_payments"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["transactions-all"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
       qc.invalidateQueries({ queryKey: ["obligations"] });
     },
   });
@@ -301,7 +285,7 @@ export const useReceivePot = () => {
       tontine_id: string;
       amount: number;
       cycle_number: number;
-      linked_account_id: string;
+      payment_method_id: string;
       tontine_name: string;
       member_id: string;
     }) => {
@@ -314,7 +298,7 @@ export const useReceivePot = () => {
         amount: input.amount,
         cycle_number: input.cycle_number,
         type: "pot_received" as const,
-        linked_account_id: input.linked_account_id,
+        payment_method_id: input.payment_method_id,
       });
       if (error) throw error;
 
@@ -345,25 +329,12 @@ export const useReceivePot = () => {
       if (category) {
         await supabase.from("transactions").insert({
           user_id: user.id,
-          account_id: input.linked_account_id,
           category_id: category.id,
           amount: input.amount,
           label: `Pot reçu - ${input.tontine_name}`,
           status: "Realized" as const,
+          payment_method_id: input.payment_method_id,
         });
-
-        // Credit account
-        const { data: account } = await supabase
-          .from("accounts")
-          .select("balance")
-          .eq("id", input.linked_account_id)
-          .single();
-        if (account) {
-          await supabase
-            .from("accounts")
-            .update({ balance: account.balance + input.amount })
-            .eq("id", input.linked_account_id);
-        }
       }
 
       // Advance cycle
@@ -393,7 +364,8 @@ export const useReceivePot = () => {
       qc.invalidateQueries({ queryKey: ["tontine_members"] });
       qc.invalidateQueries({ queryKey: ["tontine_payments"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["transactions-all"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
       qc.invalidateQueries({ queryKey: ["obligations"] });
     },
   });
@@ -403,7 +375,6 @@ export const useDeleteTontine = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      // Delete linked obligations first
       await supabase.from("obligations").delete().eq("linked_tontine_id", id);
       const { error } = await supabase.from("tontines").delete().eq("id", id);
       if (error) throw error;

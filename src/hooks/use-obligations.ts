@@ -75,10 +75,10 @@ export const useLogObligationPayment = () => {
       obligation: Obligation;
       amount: number;
       payment_date: string;
-      account_id: string;
+      payment_method_id: string;
       notes?: string;
     }) => {
-      const { obligation, amount, payment_date, account_id, notes } = params;
+      const { obligation, amount, payment_date, payment_method_id, notes } = params;
 
       // 1. Create payment record
       const { error: payError } = await supabase.from("obligation_payments").insert([{
@@ -86,7 +86,7 @@ export const useLogObligationPayment = () => {
         user_id: user!.id,
         amount,
         payment_date,
-        account_id,
+        payment_method_id,
         notes: notes || null,
       }]);
       if (payError) throw payError;
@@ -134,26 +134,13 @@ export const useLogObligationPayment = () => {
       const txAmount = obligation.type === "creance" ? amount : -amount;
       const { error: txErr } = await supabase.from("transactions").insert([{
         user_id: user!.id,
-        account_id,
         category_id: categoryId,
         amount: txAmount,
         label: `${catName} — ${obligation.person_name}`,
         date: payment_date,
+        payment_method_id,
       }]);
       if (txErr) throw txErr;
-
-      // 4. Update account balance
-      const { data: acc } = await supabase
-        .from("accounts")
-        .select("balance")
-        .eq("id", account_id)
-        .maybeSingle();
-      if (acc) {
-        await supabase
-          .from("accounts")
-          .update({ balance: acc.balance + txAmount })
-          .eq("id", account_id);
-      }
 
       return { settled: newRemaining === 0 };
     },
@@ -162,7 +149,7 @@ export const useLogObligationPayment = () => {
       qc.invalidateQueries({ queryKey: ["obligation-payments"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions-all"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
     },
   });
 };

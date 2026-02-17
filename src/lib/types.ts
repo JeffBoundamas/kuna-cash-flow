@@ -1,19 +1,6 @@
-export type AccountType = "Bank" | "Mobile Money" | "Cash" | "Tontine";
 export type TransactionStatus = "Planned" | "Realized";
 export type CategoryType = "Income" | "Expense";
 export type CategoryNature = "Essential" | "Desire" | "Savings";
-
-export interface Account {
-  id: string;
-  user_id: string;
-  name: string;
-  type: AccountType;
-  balance: number;
-  icon: string;
-  balance_threshold: number | null;
-  created_at: string;
-  updated_at: string;
-}
 
 export interface Category {
   id: string;
@@ -28,7 +15,7 @@ export interface Category {
 export interface Transaction {
   id: string;
   user_id: string;
-  account_id: string;
+  account_id: string | null;
   category_id: string;
   amount: number;
   label: string;
@@ -71,7 +58,7 @@ export interface Goal {
 export interface RecurringTransaction {
   id: string;
   user_id: string;
-  account_id: string;
+  payment_method_id: string | null;
   category_id: string;
   amount: number;
   label: string;

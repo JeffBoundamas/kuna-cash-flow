@@ -42,7 +42,7 @@ const AddFundsSheet = ({ open, onOpenChange, goal, onGoalReached }: Props) => {
     }
 
     addFunds.mutate(
-      { goalId: goal.id, amount: parsedAmount, accountId: selectedPM },
+      { goalId: goal.id, amount: parsedAmount, paymentMethodId: selectedPM },
       {
         onSuccess: () => {
           toast.success(`${formatXAF(parsedAmount)} ajoutés à "${goal.name}"`);

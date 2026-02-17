@@ -36,7 +36,7 @@ const ReceivePotSheet = ({ open, onOpenChange, tontineId, tontineName, potAmount
         tontine_id: tontineId,
         amount: potAmount,
         cycle_number: currentCycle,
-        linked_account_id: selectedPM,
+        payment_method_id: selectedPM,
         tontine_name: tontineName,
         member_id: memberId,
       },

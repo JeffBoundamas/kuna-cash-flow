@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Download } from "lucide-react";
 import { useAllTransactions } from "@/hooks/use-transactions";
 import { useCategories } from "@/hooks/use-categories";
-import { useAccounts } from "@/hooks/use-accounts";
+import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
 
 interface Props {
   open: boolean;
@@ -16,7 +16,7 @@ interface Props {
 const ExportCSVSheet = ({ open, onOpenChange }: Props) => {
   const { data: transactions = [] } = useAllTransactions();
   const { data: categories = [] } = useCategories();
-  const { data: accounts = [] } = useAccounts();
+  const { data: accounts = [] } = usePaymentMethodsWithBalance();
 
   const today = new Date().toISOString().slice(0, 10);
   const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
@@ -41,7 +41,7 @@ const ExportCSVSheet = ({ open, onOpenChange }: Props) => {
           `"${t.label.replace(/"/g, '""')}"`,
           t.amount,
           `"${catMap.get(t.category_id) ?? ""}"`,
-          `"${accMap.get(t.account_id) ?? ""}"`,
+          `"${accMap.get(t.payment_method_id ?? "") ?? accMap.get(t.account_id ?? "") ?? ""}"`,
           t.status,
         ].join(",")
       )

@@ -56,7 +56,7 @@ const PayFixedChargeSheet = ({ charge, onClose }: Props) => {
       obligation: matchingObligation,
       amount: matchingObligation.remaining_amount,
       payment_date: payDate,
-      account_id: pmId, // payment method acts as account
+      payment_method_id: pmId,
       notes: `Paiement ${charge.name} — ${new Date(payDate).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}`,
     }, {
       onSuccess: () => {

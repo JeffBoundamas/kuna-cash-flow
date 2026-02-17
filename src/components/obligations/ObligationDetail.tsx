@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { formatXAF } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { useObligationPayments, useCancelObligation } from "@/hooks/use-obligations";
-import { useAccounts } from "@/hooks/use-accounts";
+import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
 import { toast } from "@/hooks/use-toast";
 import LogObligationPaymentSheet from "./LogObligationPaymentSheet";
 import EditObligationSheet from "./EditObligationSheet";
@@ -34,7 +34,7 @@ const ObligationDetail = ({ obligation: ob, onBack }: Props) => {
   const [showEdit, setShowEdit] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const { data: payments = [] } = useObligationPayments(ob.id);
-  const { data: accounts = [] } = useAccounts();
+  const { data: accounts = [] } = usePaymentMethodsWithBalance();
   const cancelOb = useCancelObligation();
   const isCreance = ob.type === "creance";
 
@@ -159,7 +159,7 @@ const ObligationDetail = ({ obligation: ob, onBack }: Props) => {
                   <p className="text-sm font-medium">{formatXAF(p.amount)}</p>
                   <p className="text-[11px] text-muted-foreground">
                     {new Date(p.payment_date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
-                    {p.account_id && accMap.has(p.account_id) && ` · ${accMap.get(p.account_id)!.name}`}
+                    {(p.payment_method_id || p.account_id) && accMap.has((p.payment_method_id || p.account_id)!) && ` · ${accMap.get((p.payment_method_id || p.account_id)!)!.name}`}
                   </p>
                   {p.notes && <p className="text-[11px] text-muted-foreground italic mt-0.5">{p.notes}</p>}
                 </div>

@@ -3,7 +3,7 @@ import { ArrowLeft, Trash2, HandCoins, Gift, TrendingUp, Clock, CalendarCheck, P
 import { cn } from "@/lib/utils";
 import { formatXAF } from "@/lib/currency";
 import { useTontineMembers, useTontinePayments, useDeleteTontine } from "@/hooks/use-tontines";
-import { useAccounts } from "@/hooks/use-accounts";
+import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,7 @@ interface Props {
 const TontineDetailView = ({ tontine, onBack }: Props) => {
   const { data: members = [] } = useTontineMembers(tontine.id);
   const { data: payments = [] } = useTontinePayments(tontine.id);
-  const { data: accounts = [] } = useAccounts();
+  const { data: accounts = [] } = usePaymentMethodsWithBalance();
 
   const [showContribution, setShowContribution] = useState(false);
   const [showReceivePot, setShowReceivePot] = useState(false);
@@ -225,7 +225,7 @@ const TontineDetailView = ({ tontine, onBack }: Props) => {
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {new Date(p.payment_date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
-                        {p.linked_account_id && accMap.has(p.linked_account_id) && ` · ${accMap.get(p.linked_account_id)!.name}`}
+                        {(p.payment_method_id || p.linked_account_id) && accMap.has(p.payment_method_id || p.linked_account_id || "") && ` · ${accMap.get(p.payment_method_id || p.linked_account_id || "")!.name}`}
                       </p>
                     </div>
                   </div>

@@ -46,7 +46,7 @@ const LogContributionSheet = ({ open, onOpenChange, tontineId, tontineName, amou
         tontine_id: tontineId,
         amount,
         cycle_number: currentCycle,
-        linked_account_id: selectedPM,
+        payment_method_id: selectedPM,
         tontine_name: tontineName,
       },
       {

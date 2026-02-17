@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Landmark, Smartphone, Banknote, Users, TrendingUp, TrendingDown } from "lucide-react";
 import { formatXAFShort, formatXAF } from "@/lib/currency";
 import { cn } from "@/lib/utils";
-import type { Account, Transaction } from "@/lib/types";
+import type { Transaction } from "@/lib/types";
+
+type Account = { id: string; name: string; type?: string; balance?: number; icon?: string };
 
 const typeConfig: Record<string, { icon: typeof Landmark; gradient: string }> = {
   Bank: { icon: Landmark, gradient: "from-blue-500/10 to-blue-600/5 border-blue-200 dark:border-blue-800" },

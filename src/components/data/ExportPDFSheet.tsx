@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, TrendingUp, TrendingDown } from "lucide-react";
 import { useAllTransactions } from "@/hooks/use-transactions";
 import { useCategories } from "@/hooks/use-categories";
-import { useAccounts } from "@/hooks/use-accounts";
+import { usePaymentMethodsWithBalance } from "@/hooks/use-payment-methods-with-balance";
 import { formatXAF } from "@/lib/currency";
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
 const ExportPDFSheet = ({ open, onOpenChange }: Props) => {
   const { data: transactions = [] } = useAllTransactions();
   const { data: categories = [] } = useCategories();
-  const { data: accounts = [] } = useAccounts();
+  const { data: accounts = [] } = usePaymentMethodsWithBalance();
 
   const catMap = new Map(categories.map((c) => [c.id, c.name]));
   const accMap = new Map(accounts.map((a) => [a.id, a.name]));

@@ -38,5 +38,6 @@ export interface TontinePayment {
   cycle_number: number;
   type: TontinePaymentType;
   linked_account_id: string | null;
+  payment_method_id: string | null;
   created_at: string;
 }

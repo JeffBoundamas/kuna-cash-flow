@@ -105,7 +105,6 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
 
     try {
       await addTransaction.mutateAsync({
-        account_id: selectedPM,
         payment_method_id: selectedPM,
         category_id: categoryId,
         amount: finalAmount,
@@ -116,7 +115,7 @@ const QuickAddModal = ({ open, onOpenChange }: QuickAddModalProps) => {
 
       if (isRecurring) {
         await addRecurring.mutateAsync({
-          account_id: selectedPM,
+          payment_method_id: selectedPM,
           category_id: categoryId,
           amount: finalAmount,
           label: label || "Transaction",

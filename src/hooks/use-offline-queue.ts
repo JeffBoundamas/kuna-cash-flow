@@ -7,12 +7,12 @@ import { toast } from "@/hooks/use-toast";
 const QUEUE_KEY = "kuna_offline_queue";
 
 interface QueuedTransaction {
-  account_id: string;
   category_id: string;
   amount: number;
   label: string;
   date: string;
   sms_reference?: string;
+  payment_method_id?: string;
   user_id: string;
 }
 
@@ -48,18 +48,6 @@ export const useOfflineQueue = () => {
       const tx = queue[i];
       const { error } = await supabase.from("transactions").insert([tx]);
       if (!error) {
-        // Update account balance
-        const { data: acc } = await supabase
-          .from("accounts")
-          .select("balance")
-          .eq("id", tx.account_id)
-          .maybeSingle();
-        if (acc) {
-          await supabase
-            .from("accounts")
-            .update({ balance: acc.balance + tx.amount })
-            .eq("id", tx.account_id);
-        }
         synced.push(i);
       }
     }
@@ -69,7 +57,7 @@ export const useOfflineQueue = () => {
       setQueue(remaining);
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["transactions-all"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["payment_methods"] });
       toast({
         title: `${synced.length} transaction(s) synchronisée(s) ✓`,
         description: "Les transactions hors-ligne ont été envoyées.",
