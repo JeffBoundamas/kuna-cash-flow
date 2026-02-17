@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, Landmark, Smartphone, Banknote, ArrowRight, Check, Sparkles, Target, Receipt } from "lucide-react";
+import { Wallet, Target, Receipt, ArrowRight, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import kunaLogo from "@/assets/logo.png";
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -19,13 +17,7 @@ const slideVariants = {
 const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
-
   const totalSteps = 3;
-
-  const handleSkip = () => {
-    localStorage.setItem("kuna_onboarding_done", "true");
-    onComplete();
-  };
 
   const goNext = () => {
     if (step < totalSteps - 1) {
@@ -34,15 +26,10 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
     }
   };
 
-  const handleFinish = () => {
-    localStorage.setItem("kuna_onboarding_done", "true");
-    onComplete();
-  };
-
   return (
     <div className="fixed inset-0 z-[60] flex flex-col items-center justify-between bg-background">
       <div className="w-full max-w-lg flex justify-end px-6 pt-6">
-        <button onClick={handleSkip} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={onComplete} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           Passer
         </button>
       </div>
@@ -78,18 +65,12 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
           ))}
         </div>
 
-        {step === 0 && (
+        {step < totalSteps - 1 ? (
           <Button className="w-full h-12 text-base" onClick={goNext}>
-            Commencer <ArrowRight className="ml-2 h-4 w-4" />
+            {step === 0 ? "Commencer" : "Continuer"} <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-        )}
-        {step === 1 && (
-          <Button className="w-full h-12 text-base" onClick={goNext}>
-            Continuer <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        )}
-        {step === 2 && (
-          <Button className="w-full h-12 text-base" onClick={handleFinish}>
+        ) : (
+          <Button className="w-full h-12 text-base" onClick={onComplete}>
             <Check className="mr-2 h-4 w-4" /> C'est parti !
           </Button>
         )}
@@ -100,9 +81,7 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
 const WelcomeStep = () => (
   <div className="text-center space-y-6">
-    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
-      <Sparkles className="h-10 w-10 text-primary" />
-    </div>
+    <img src={kunaLogo} alt="Kuna" className="h-20 w-20 mx-auto drop-shadow-md" />
     <div className="space-y-2">
       <h1 className="text-2xl font-bold font-display">Bienvenue sur Kuna Finance</h1>
       <p className="text-muted-foreground leading-relaxed">

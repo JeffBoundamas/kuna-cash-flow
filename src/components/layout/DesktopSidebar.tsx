@@ -1,6 +1,7 @@
 import { NavLink as RouterNavLink } from "react-router-dom";
 import { LayoutDashboard, ArrowLeftRight, PieChart, Wallet, MoreHorizontal, Target, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
+import kunaLogo from "@/assets/logo.png";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Tableau de bord" },
@@ -16,9 +17,12 @@ const DesktopSidebar = () => {
   return (
     <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-60 border-r border-border bg-card z-40">
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-border">
-        <h1 className="text-xl font-bold font-display text-primary">Kuna</h1>
-        <p className="text-xs text-muted-foreground">Gestion de finances</p>
+      <div className="px-5 py-5 border-b border-border flex items-center gap-3">
+        <img src={kunaLogo} alt="Kuna" className="h-10 w-10" />
+        <div>
+          <h1 className="text-lg font-bold font-display text-primary leading-tight">Kuna</h1>
+          <p className="text-[10px] text-muted-foreground">Gestion de finances</p>
+        </div>
       </div>
 
       {/* Navigation */}

@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Sparkles, Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import kunaLogo from "@/assets/logo.png";
 
 const Auth = () => {
   const { user, loading } = useAuth();
@@ -68,9 +69,7 @@ const Auth = () => {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       {/* Logo */}
       <div className="mb-8 flex flex-col items-center gap-3">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-          <Sparkles className="h-8 w-8" />
-        </div>
+        <img src={kunaLogo} alt="Kuna" className="h-20 w-20 drop-shadow-md" />
         <div className="text-center">
           <h1 className="text-2xl font-bold font-display">Kuna Finance</h1>
           <p className="text-sm text-muted-foreground mt-1">
