@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Mail, Phone, ChevronRight, ArrowDownCircle, ArrowUpCircle, Repeat, Download, Upload, FileText, Trash2, Bell } from "lucide-react";
+import { LogOut, User, Mail, Phone, ChevronRight, ArrowDownCircle, ArrowUpCircle, Repeat, Download, Upload, FileText, Trash2, Bell, FlaskConical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRecurringTransactions } from "@/hooks/use-recurring-transactions";
 import { useCategories } from "@/hooks/use-categories";
@@ -256,6 +256,49 @@ const Settings = () => {
 
       {/* SMS Integration */}
       <SmsSettingsSection />
+
+      {/* Demo Seed (dev) */}
+      <div className="rounded-2xl bg-card border border-dashed border-amber-500/50 overflow-hidden">
+        <div className="px-5 py-3 border-b border-border">
+          <h2 className="text-sm font-bold font-display flex items-center gap-2">
+            <FlaskConical className="h-4 w-4 text-amber-500" />
+            Données de test (dev)
+          </h2>
+        </div>
+        <div className="p-4 grid grid-cols-3 gap-2">
+          {[
+            { key: "etudiant", label: "🎓 Étudiant" },
+            { key: "salarie", label: "💼 Salarié" },
+            { key: "commercant", label: "🏪 Commerçant" },
+          ].map((p) => (
+            <Button
+              key={p.key}
+              variant="outline"
+              size="sm"
+              className="text-xs rounded-xl"
+              onClick={async () => {
+                toast({ title: `⏳ Chargement du profil ${p.label}…` });
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                  toast({ title: "Non connecté", variant: "destructive" });
+                  return;
+                }
+                const res = await supabase.functions.invoke("seed-demo-data", {
+                  body: { persona: p.key },
+                });
+                if (res.error) {
+                  toast({ title: "Erreur", description: String(res.error), variant: "destructive" });
+                } else {
+                  toast({ title: `✅ Profil ${p.label} chargé !`, description: `${res.data?.summary?.transactions || 0} transactions créées` });
+                  window.location.reload();
+                }
+              }}
+            >
+              {p.label}
+            </Button>
+          ))}
+        </div>
+      </div>
 
       <Button
         onClick={handleLogout}
