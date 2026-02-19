@@ -31,6 +31,7 @@ const currentYear = now.getFullYear();
 const Dashboard = () => {
   const { user } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
+  const [firstName, setFirstName] = useState<string>("");
   const { data: methods = [], isLoading: loadingPM } = usePaymentMethodsWithBalance();
   const { data: transactions = [], isLoading: loadingTx } = useTransactions(currentMonth, currentYear);
   const { data: categories = [] } = useCategories();
@@ -43,11 +44,14 @@ const Dashboard = () => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("onboarding_done")
+      .select("onboarding_done, full_name")
       .eq("user_id", user.id)
       .single()
       .then(({ data }) => {
         setShowOnboarding(data ? !data.onboarding_done : true);
+        if (data?.full_name) {
+          setFirstName(data.full_name.split(" ")[0]);
+        }
       });
   }, [user]);
 
@@ -113,7 +117,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">Bonjour 👋</p>
+          <p className="text-sm text-muted-foreground">Bonjour{firstName ? ` ${firstName}` : ""} 👋</p>
           <h1 className="text-xl font-bold font-display">Kuna Finance</h1>
         </div>
         <div className="flex items-center gap-2">

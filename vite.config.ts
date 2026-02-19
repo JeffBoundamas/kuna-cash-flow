@@ -18,7 +18,8 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "pwa-192.png", "pwa-512.png"],
+      injectRegister: "auto",
+      includeAssets: ["favicon.ico", "pwa-192.png", "pwa-512.png", "logo.png"],
       manifest: {
         name: "Kuna Finance — Gestion de finances personnelles",
         short_name: "Kuna Finance",

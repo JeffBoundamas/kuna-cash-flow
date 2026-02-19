@@ -1,28 +1,29 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Target, Settings, Download, CreditCard, CalendarClock, ChevronRight } from "lucide-react";
-
-const items = [
-  { to: "/fixed-charges", icon: CalendarClock, label: "Charges fixes" },
-  { to: "/payment-methods", icon: CreditCard, label: "Moyens de paiement" },
-  { to: "/goals", icon: Target, label: "Objectifs d'épargne" },
-  { to: "/settings", icon: Settings, label: "Paramètres" },
-  { to: "/export", icon: Download, label: "Exporter mes données", placeholder: true },
-];
+import ExportCSVSheet from "@/components/data/ExportCSVSheet";
 
 const More = () => {
   const navigate = useNavigate();
+  const [showExport, setShowExport] = useState(false);
+
+  const items = [
+    { to: "/fixed-charges", icon: CalendarClock, label: "Charges fixes", action: () => navigate("/fixed-charges") },
+    { to: "/payment-methods", icon: CreditCard, label: "Moyens de paiement", action: () => navigate("/payment-methods") },
+    { to: "/goals", icon: Target, label: "Objectifs d'épargne", action: () => navigate("/goals") },
+    { to: "/settings", icon: Settings, label: "Paramètres", action: () => navigate("/settings") },
+    { to: "/export", icon: Download, label: "Exporter mes données", action: () => setShowExport(true) },
+  ];
 
   return (
     <div className="px-4 pt-6 pb-24 space-y-4">
       <h1 className="text-xl font-bold font-display">Plus</h1>
 
       <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
-        {items.map(({ to, icon: Icon, label, placeholder }) => (
+        {items.map(({ to, icon: Icon, label, action }) => (
           <button
             key={to}
-            onClick={() => {
-              if (!placeholder) navigate(to);
-            }}
+            onClick={action}
             className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -33,6 +34,8 @@ const More = () => {
           </button>
         ))}
       </div>
+
+      <ExportCSVSheet open={showExport} onOpenChange={setShowExport} />
     </div>
   );
 };
