@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { enqueueTransaction } from "@/hooks/use-offline-queue";
+import { toast } from "@/hooks/use-toast";
 import type { Transaction } from "@/lib/types";
 
 export const useTransactions = (month?: number, year?: number) => {
@@ -87,6 +89,25 @@ export const useAddTransaction = () => {
         payment_method_id: tx.payment_method_id,
         ...(tx.status ? { status: tx.status } : {}),
       };
+
+      // If offline, queue the transaction for later sync
+      if (!navigator.onLine) {
+        enqueueTransaction({
+          category_id: payload.category_id,
+          amount: payload.amount,
+          label: payload.label,
+          date: payload.date || new Date().toISOString().slice(0, 10),
+          sms_reference: payload.sms_reference,
+          payment_method_id: payload.payment_method_id,
+          user_id: payload.user_id,
+        });
+        toast({
+          title: "Transaction enregistrée hors-ligne 📴",
+          description: "Elle sera synchronisée automatiquement au retour du réseau.",
+        });
+        return;
+      }
+
       const { error } = await supabase.from("transactions").insert([payload]);
       if (error) throw error;
     },
