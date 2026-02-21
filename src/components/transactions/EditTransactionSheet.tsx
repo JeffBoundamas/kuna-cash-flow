@@ -59,8 +59,11 @@ const EditTransactionSheet = ({ open, onOpenChange, transaction }: EditTransacti
     // Balance validation for expenses
     const pm = paymentMethods.find((p) => p.id === pmId);
     if (pm && finalAmount < 0) {
-      // Add back the old transaction amount before checking
-      const adjustedPm = { ...pm, currentBalance: pm.currentBalance - (transaction.amount) };
+      // Determine which PM the old transaction was on (payment_method_id or legacy account_id)
+      const oldPmId = transaction.payment_method_id || transaction.account_id;
+      // Only "add back" the old amount if it was on the same PM
+      const oldAmountOnSamePm = oldPmId === pmId ? transaction.amount : 0;
+      const adjustedPm = { ...pm, currentBalance: pm.currentBalance - oldAmountOnSamePm };
       const err = checkBalanceSufficiency(adjustedPm, finalAmount);
       if (err) {
         toast({ title: "Solde insuffisant", description: err, variant: "destructive" });
