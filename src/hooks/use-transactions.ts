@@ -140,6 +140,9 @@ export const useUpdateTransaction = () => {
           date: updates.date,
           sms_reference: updates.sms_reference,
           payment_method_id: updates.payment_method_id,
+          // Clear legacy account_id when payment_method_id is set
+          // to avoid double-counting in balance calculations
+          account_id: null,
         })
         .eq("id", id);
       if (error) throw error;
