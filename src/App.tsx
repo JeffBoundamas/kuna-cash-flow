@@ -21,6 +21,7 @@ import Portfolio from "@/pages/Portfolio";
 import More from "@/pages/More";
 import PaymentMethods from "@/pages/PaymentMethods";
 import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import NotificationsPage from "@/pages/Notifications";
 import NotificationSettings from "@/pages/NotificationSettings";
@@ -39,6 +40,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/*"
               element={
