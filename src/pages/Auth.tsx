@@ -9,6 +9,22 @@ import { cn } from "@/lib/utils";
 import { lovable } from "@/integrations/lovable/index";
 import kunaLogo from "@/assets/logo.png";
 
+const translateAuthError = (msg: string): string => {
+  const map: Record<string, string> = {
+    "Invalid login credentials": "Identifiants incorrects. Vérifiez votre email et mot de passe.",
+    "Email not confirmed": "Votre email n'a pas encore été confirmé. Vérifiez votre boîte mail.",
+    "User already registered": "Un compte existe déjà avec cet email.",
+    "Signup requires a valid password": "Le mot de passe est invalide.",
+    "Password should be at least 6 characters": "Le mot de passe doit contenir au moins 6 caractères.",
+    "Email rate limit exceeded": "Trop de tentatives. Veuillez réessayer plus tard.",
+    "For security purposes, you can only request this once every 60 seconds": "Pour des raisons de sécurité, veuillez patienter 60 secondes avant de réessayer.",
+  };
+  for (const [key, value] of Object.entries(map)) {
+    if (msg.includes(key)) return value;
+  }
+  return msg;
+};
+
 const Auth = () => {
   const { user, loading } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
