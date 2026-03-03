@@ -60,7 +60,7 @@ const ResetPassword = () => {
       toast({ title: "Succès ✓", description: "Votre mot de passe a été réinitialisé." });
       navigate("/");
     } catch (error: any) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      toast({ title: "Erreur", description: translateAuthError(error.message), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

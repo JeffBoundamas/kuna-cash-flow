@@ -190,7 +190,7 @@ const Auth = () => {
                   if (error) throw error;
                   toast({ title: "Email envoyé ✓", description: "Vérifiez votre boîte mail pour réinitialiser votre mot de passe." });
                 } catch (err: any) {
-                  toast({ title: "Erreur", description: err.message, variant: "destructive" });
+                  toast({ title: "Erreur", description: translateAuthError(err.message), variant: "destructive" });
                 }
               }}
               className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
