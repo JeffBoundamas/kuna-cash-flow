@@ -6,6 +6,18 @@ import { toast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
 import kunaLogo from "@/assets/logo.png";
 
+const translateAuthError = (msg: string): string => {
+  const map: Record<string, string> = {
+    "New password should be different from the old password": "Le nouveau mot de passe doit être différent de l'ancien.",
+    "Password should be at least 6 characters": "Le mot de passe doit contenir au moins 6 caractères.",
+    "Auth session missing": "Session expirée. Veuillez redemander un lien de réinitialisation.",
+  };
+  for (const [key, value] of Object.entries(map)) {
+    if (msg.includes(key)) return value;
+  }
+  return msg;
+};
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
