@@ -58,7 +58,7 @@ const Auth = () => {
     } catch (error: any) {
       toast({
         title: "Erreur",
-        description: error.message,
+        description: translateAuthError(error.message),
         variant: "destructive",
       });
     } finally {
