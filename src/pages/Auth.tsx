@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { Mail, Lock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { lovable } from "@/integrations/lovable/index";
-import kunaLogo from "@/assets/logo.png";
+const kunaLogo = "/logo.png";
 
 const Auth = () => {
   const { user, loading } = useAuth();
