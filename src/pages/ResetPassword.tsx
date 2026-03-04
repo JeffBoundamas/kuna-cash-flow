@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
-import kunaLogo from "@/assets/logo.png";
+const kunaLogo = "/logo.png";
 
 const ResetPassword = () => {
   const navigate = useNavigate();

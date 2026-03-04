@@ -1,7 +1,7 @@
 import { NavLink as RouterNavLink } from "react-router-dom";
 import { LayoutDashboard, ArrowLeftRight, PieChart, Wallet, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
-import kunaLogo from "@/assets/logo.png";
+const kunaLogo = "/logo.png";
 
 const tabs = [
   { to: "/", icon: LayoutDashboard, label: "Tableau" },
